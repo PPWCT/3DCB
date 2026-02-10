@@ -45,7 +45,7 @@
         body {
             font-family: 'Work Sans', sans-serif;
             background: #13151C;
-            padding: 20px;
+            padding: 12px;
             min-height: 100vh;
             color: var(--text-color);
             position: relative;
@@ -86,7 +86,7 @@
         
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             position: relative;
         }
         
@@ -134,10 +134,10 @@
         
         .title {
             font-family: 'Bebas Neue', cursive;
-            font-size: 52px;
+            font-size: 36px;
             color: var(--soft-text);
-            letter-spacing: 8px;
-            margin-bottom: 5px;
+            letter-spacing: 6px;
+            margin-bottom: 0;
             text-shadow: 0 0 20px rgba(96, 165, 250, 0.3);
         }
         
@@ -151,16 +151,41 @@
         .date-picker-section {
             background: rgba(37, 41, 54, 0.5);
             backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
             border: 1px solid rgba(96, 165, 250, 0.12);
+        }
+        
+        .date-nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, var(--tech-blue) 0%, #3b82f6 100%);
+            color: #F0F2F5;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .date-nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
+        }
+        
+        .date-nav-btn:active {
+            transform: translateY(0);
         }
         
         .date-picker-label {
@@ -252,10 +277,10 @@
         
         .sync-status {
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: var(--soft-text);
-            margin-bottom: 15px;
-            min-height: 18px;
+            margin-bottom: 8px;
+            min-height: 16px;
         }
         
         .sync-status.success { color: var(--success-green); }
@@ -278,8 +303,8 @@
             display: grid;
             grid-template-columns: 150px repeat(3, 1fr) 150px;
             background: linear-gradient(135deg, rgba(96, 165, 250, 0.3) 0%, rgba(96, 165, 250, 0.2) 100%);
-            padding: 15px;
-            gap: 15px;
+            padding: 10px;
+            gap: 10px;
             min-width: 600px;
             border-bottom: 1px solid rgba(96, 165, 250, 0.2);
         }
@@ -293,10 +318,10 @@
         }
         
         .goal-label {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             color: var(--text-color);
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         
         .goal-value {
@@ -308,7 +333,7 @@
         
         .goal-number {
             font-family: 'Bebas Neue', cursive;
-            font-size: 32px;
+            font-size: 28px;
             color: #F0F2F5;
         }
         
@@ -348,15 +373,16 @@
             color: var(--text-color);
             font-weight: 700;
             text-align: center;
-            padding: 15px 10px;
+            padding: 10px 8px;
             border-bottom: 2px solid rgba(96, 165, 250, 0.3);
+            font-size: 13px;
         }
         
         .grid-row {
             display: grid;
             grid-template-columns: 150px repeat(3, 1fr) 150px;
             border-bottom: 1px solid var(--border-color);
-            min-height: 80px;
+            min-height: 70px;
         }
         
         .grid-row:hover {
@@ -364,19 +390,20 @@
         }
         
         .tech-name {
-            padding: 20px;
+            padding: 12px 16px;
             font-weight: 700;
             color: var(--tech-blue);
             display: flex;
             align-items: center;
             border-right: 1px solid var(--border-color);
+            font-size: 14px;
         }
         
         .day-cell {
-            padding: 10px;
+            padding: 8px;
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
             justify-content: center;
             border-right: 1px solid var(--border-color);
@@ -384,13 +411,13 @@
         }
         
         .add-job-btn {
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             cursor: pointer;
             transition: all 0.2s;
             border: 2px dashed var(--tech-blue);
@@ -407,13 +434,13 @@
         
         /* Priority 3: Larger, clearer markers */
         .appt-marker {
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             cursor: pointer;
             transition: all 0.2s;
             border: 2px dashed var(--border-color);
@@ -459,18 +486,18 @@
         .total-cell {
             text-align: center;
             font-weight: 700;
-            font-size: 32px;
+            font-size: 28px;
             color: var(--primary-red);
             font-family: 'Bebas Neue', cursive;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
         }
         
         .availability-info {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--soft-text);
             font-weight: 500;
             font-family: 'Work Sans', sans-serif;
@@ -485,10 +512,10 @@
         }
         
         .goal-progress {
-            font-size: 14px;
+            font-size: 12px;
             font-family: 'Work Sans', sans-serif;
             font-weight: 600;
-            padding: 4px 8px;
+            padding: 3px 6px;
             border-radius: 4px;
         }
         
@@ -514,45 +541,46 @@
             background: rgba(252, 211, 77, 0.15);
             border-top: 2px solid var(--warning-yellow);
             border-bottom: 2px solid var(--warning-yellow);
-            padding: 10px 0;
+            padding: 8px 0;
         }
         
         .cancel-cell {
             text-align: center;
-            font-size: 14px;
+            font-size: 12px;
             color: var(--text-color);
             font-weight: 600;
-            padding: 5px;
+            padding: 4px;
         }
         
         .footer {
-            padding: 20px;
+            padding: 12px;
             text-align: center;
             background: rgba(37, 41, 54, 0.3);
         }
         
         .legend {
             display: flex;
-            gap: 20px;
+            gap: 12px;
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
+            font-size: 12px;
         }
         
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
         
         .legend-box {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 13px;
         }
         
         .legend-box.complete {
@@ -566,37 +594,37 @@
         }
         
         .notes-section {
-            padding: 20px;
+            padding: 12px;
             background: rgba(42, 46, 61, 0.3);
             border-top: 2px solid rgba(96, 165, 250, 0.3);
         }
         
         .notes-header {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--text-color);
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             text-align: center;
         }
         
         .notes-grid {
             display: grid;
-            gap: 15px;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         }
         
         .note-item {
             background: rgba(37, 41, 54, 0.5);
             border-radius: 8px;
-            padding: 15px;
+            padding: 10px;
             border: 1px solid rgba(96, 165, 250, 0.2);
         }
         
         .note-label {
             font-weight: 700;
             color: var(--tech-blue);
-            margin-bottom: 8px;
-            font-size: 14px;
+            margin-bottom: 6px;
+            font-size: 13px;
         }
         
         .note-input {
@@ -604,12 +632,12 @@
             background: rgba(26, 29, 38, 0.8);
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            padding: 10px;
+            padding: 8px;
             color: var(--text-color);
             font-family: 'Work Sans', sans-serif;
-            font-size: 14px;
+            font-size: 13px;
             resize: vertical;
-            min-height: 80px;
+            min-height: 70px;
         }
         
         .note-input:focus {
@@ -638,29 +666,29 @@
         .modal-content {
             background: rgba(37, 41, 54, 0.95);
             backdrop-filter: blur(20px);
-            padding: 30px;
-            border-radius: 16px;
-            min-width: 300px;
+            padding: 20px;
+            border-radius: 12px;
+            min-width: 280px;
             border: 2px solid rgba(96, 165, 250, 0.3);
         }
         
         .modal-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 14px;
             color: var(--text-color);
         }
         
         .modal-options {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             flex-direction: column;
         }
         
         .modal-btn {
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             border: none;
@@ -699,7 +727,8 @@
         
         @media (max-width: 768px) {
             .title {
-                font-size: 36px;
+                font-size: 28px;
+                letter-spacing: 4px;
             }
             .date-picker-section {
                 flex-direction: column;
@@ -723,10 +752,15 @@
         </div>
         
         <div class="date-picker-section">
+            <button class="date-nav-btn" onclick="adjustDates(-1)" title="Previous day" aria-label="Go to previous day">
+                ◀
+            </button>
             <!-- Priority 2: Associated label -->
             <label class="date-picker-label" for="startDatePicker">Start Date:</label>
-            <input type="date" class="date-picker-input" id="startDatePicker" />
-            <button class="apply-dates-btn" onclick="applyStartDate()">Apply Dates</button>
+            <input type="date" class="date-picker-input" id="startDatePicker" onchange="applyStartDate()" />
+            <button class="date-nav-btn" onclick="adjustDates(1)" title="Next day" aria-label="Go to next day">
+                ▶
+            </button>
             <div class="date-preview" id="datePreview"></div>
         </div>
         
@@ -740,8 +774,8 @@
             </button>
         </div>
         <div class="sync-status" id="syncStatus"></div>
-        <div style="text-align: center; margin-bottom: 15px;">
-            <a href="https://drive.google.com/drive/folders/1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU" target="_blank" style="font-size: 11px; color: var(--tech-blue); text-decoration: none;">
+        <div style="text-align: center; margin-bottom: 10px;">
+            <a href="https://drive.google.com/drive/folders/1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU" target="_blank" style="font-size: 10px; color: var(--tech-blue); text-decoration: none;">
                 📁 View Drive Folder
             </a>
         </div>
@@ -816,6 +850,9 @@
             { id: 'td2', label: 'TD2', date: '2/11', goal: 9, notes: '' },
             { id: 'td3', label: 'TD3', date: '2/12', goal: 5, notes: '' }
         ];
+        
+        // Date-based storage: stores all data for each unique date
+        let dateStorage = {}; // Format: { "2/10/2026": { data: {...}, goals: {...}, notes: {...} } }
         
         let data = {};
         techs.forEach(tech => {
@@ -948,6 +985,9 @@
                 showStatus('Saving...', '');
             }
             
+            // Save current visible data before creating backup
+            saveCurrentDateData();
+            
             try {
                 const summary = {
                     "CALL BOARD BACKUP": {
@@ -1016,7 +1056,8 @@
                         techs: techs,
                         days: days,
                         data: data,
-                        customRows: customRows
+                        customRows: customRows,
+                        dateStorage: dateStorage // Save all date memories
                     }
                 };
                 
@@ -1080,6 +1121,10 @@
                 if (boardData.customRows) {
                     customRows.length = 0;
                     customRows.push(...boardData.customRows);
+                }
+                if (boardData.dateStorage) {
+                    dateStorage = boardData.dateStorage;
+                    loadDateData(); // Load data for current visible dates
                 }
                 
                 renderBoard();
@@ -1150,8 +1195,85 @@
             return response.body || JSON.stringify(response.result);
         }
         
+        // Date-based memory functions
+        function saveCurrentDateData() {
+            // Save current board state to each date's storage
+            days.forEach((day, index) => {
+                const dateKey = day.date; // e.g., "2/10"
+                
+                if (!dateStorage[dateKey]) {
+                    dateStorage[dateKey] = {
+                        data: {},
+                        goal: day.goal,
+                        notes: day.notes
+                    };
+                }
+                
+                // Save appointments for this specific date
+                dateStorage[dateKey].data = {};
+                techs.forEach(tech => {
+                    dateStorage[dateKey].data[tech] = [...(data[tech][day.id] || [])];
+                });
+                
+                // Save goal and notes
+                dateStorage[dateKey].goal = day.goal;
+                dateStorage[dateKey].notes = day.notes;
+            });
+        }
+        
+        function loadDateData() {
+            // Load data for the current dates being displayed
+            days.forEach((day, index) => {
+                const dateKey = day.date;
+                
+                if (dateStorage[dateKey]) {
+                    // Restore appointments
+                    techs.forEach(tech => {
+                        if (dateStorage[dateKey].data[tech]) {
+                            data[tech][day.id] = [...dateStorage[dateKey].data[tech]];
+                        } else {
+                            data[tech][day.id] = [];
+                        }
+                    });
+                    
+                    // Restore goal and notes
+                    day.goal = dateStorage[dateKey].goal || (index === 0 ? 13 : index === 1 ? 9 : 5);
+                    day.notes = dateStorage[dateKey].notes || '';
+                } else {
+                    // New date - initialize with empty data
+                    techs.forEach(tech => {
+                        data[tech][day.id] = [];
+                    });
+                    day.goal = (index === 0 ? 13 : index === 1 ? 9 : 5);
+                    day.notes = '';
+                }
+            });
+        }
+        
         // Date functions
+        function adjustDates(direction) {
+            // Save current date's data before switching
+            saveCurrentDateData();
+            
+            // Get current start date
+            const startDateInput = document.getElementById('startDatePicker');
+            const currentDate = new Date(startDateInput.value);
+            
+            // Add or subtract one day
+            currentDate.setDate(currentDate.getDate() + direction);
+            
+            // Update input
+            const dateStr = currentDate.toISOString().split('T')[0];
+            startDateInput.value = dateStr;
+            
+            // Apply the new dates and load data for new dates
+            applyStartDate();
+        }
+        
         function applyStartDate() {
+            // Save current data before switching dates
+            saveCurrentDateData();
+            
             const startDateInput = document.getElementById('startDatePicker');
             const dateValue = startDateInput.value;
             
@@ -1168,6 +1290,9 @@
                 const dayNum = currentDate.getDate();
                 dayObj.date = `${monthNum}/${dayNum}`;
             });
+            
+            // Load data for the new dates
+            loadDateData();
             
             updateDatePreview();
             renderBoard();
@@ -1717,17 +1842,24 @@
             renderCancellationRow();
             renderNotes();
             updateTotals(); // Updates numbers only
+            
+            // Save current date data whenever board is re-rendered
+            saveCurrentDateData();
         }
         
         // Auto-save to browser localStorage
         function saveToLocal() {
+            // Save current visible data before storing
+            saveCurrentDateData();
+            
             const boardData = {
                 version: '1.0',
                 savedAt: new Date().toISOString(),
                 techs: techs,
                 days: days,
                 data: data,
-                customRows: customRows
+                customRows: customRows,
+                dateStorage: dateStorage // Save all date memories
             };
             localStorage.setItem('callBoardData', JSON.stringify(boardData));
         }
@@ -1754,6 +1886,11 @@
                 if (boardData.customRows) {
                     customRows.length = 0;
                     customRows.push(...boardData.customRows);
+                }
+                if (boardData.dateStorage) {
+                    dateStorage = boardData.dateStorage;
+                    // Load data for current dates
+                    loadDateData();
                 }
                 
                 renderBoard();
