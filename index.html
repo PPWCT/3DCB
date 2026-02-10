@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com; connect-src 'self' https://www.googleapis.com https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:;">
     <title>3-Day Call Board</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://apis.google.com/js/api.js"></script>
+    <!-- Fixed: onload handlers eliminate race conditions -->
+    <script src="https://accounts.google.com/gsi/client" async defer onload="gisLoaded()"></script>
+    <script src="https://apis.google.com/js/api.js" async defer onload="gapiLoaded()"></script>
     <script>
         const CLIENT_ID = '31947493557-aqbcb8n3fag89rcjnchj5p6gufuh1oda.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/drive.file';
@@ -23,15 +25,15 @@
         :root {
             --primary-red: #9FA8B8;
             --light-bg: #1A1D26;
-            --text-color: #D4D9E3;
+            --text-color: #e5e7eb;
             --border-color: #343847;
-            --success-green: #7FA99B;
-            --warning-yellow: #B8A07E;
-            --tech-blue: #7B9EB3;
+            --success-green: #86efac;
+            --warning-yellow: #fcd34d;
+            --tech-blue: #60a5fa;
             --cancel-red: #A08B8B;
             --dark-bg: #13151C;
-            --soft-text: #B0B8C3;
-            --glow-blue: rgba(123, 158, 179, 0.15);
+            --soft-text: #d1d5db;
+            --glow-blue: rgba(96, 165, 250, 0.15);
         }
         
         * {
@@ -59,14 +61,20 @@
             background: 
                 radial-gradient(circle at 30% 40%, var(--glow-blue) 0%, transparent 40%),
                 radial-gradient(circle at 70% 60%, rgba(159, 168, 184, 0.12) 0%, transparent 40%);
-            animation: gentleBreath 8s ease-in-out infinite;
+            animation: gentleBreath 14s ease-in-out infinite;
             pointer-events: none;
             z-index: 0;
         }
         
         @keyframes gentleBreath {
-            0%, 100% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 0.9; transform: scale(1.05); }
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.03); }
+        }
+        
+        /* Priority 2: Focus styles for accessibility */
+        *:focus-visible {
+            outline: 3px solid #60a5fa;
+            outline-offset: 2px;
         }
         
         .container {
@@ -79,15 +87,58 @@
         .header {
             text-align: center;
             margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .auth-corner {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .auth-corner-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            background: rgba(96, 165, 250, 0.2);
+            color: var(--tech-blue);
+            border: 1px solid var(--tech-blue);
+        }
+        
+        .auth-corner-btn:hover {
+            background: rgba(96, 165, 250, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .auth-corner-btn.signout {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border-color: #ef4444;
+        }
+        
+        .auth-corner-btn.signout:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+        
+        .auth-status {
+            font-size: 11px;
+            color: var(--success-green);
         }
         
         .title {
             font-family: 'Bebas Neue', cursive;
             font-size: 52px;
-            color: #B0B8C3;
+            color: var(--soft-text);
             letter-spacing: 8px;
             margin-bottom: 5px;
-            text-shadow: 0 0 20px rgba(123, 158, 179, 0.3);
+            text-shadow: 0 0 20px rgba(96, 165, 250, 0.3);
         }
         
         .subtitle {
@@ -109,7 +160,7 @@
             gap: 15px;
             flex-wrap: wrap;
             justify-content: center;
-            border: 1px solid rgba(123, 158, 179, 0.12);
+            border: 1px solid rgba(96, 165, 250, 0.12);
         }
         
         .date-picker-label {
@@ -130,7 +181,7 @@
         
         .apply-dates-btn {
             padding: 10px 24px;
-            background: linear-gradient(135deg, #7B9EB3 0%, #6B7A8F 100%);
+            background: linear-gradient(135deg, var(--tech-blue) 0%, #3b82f6 100%);
             color: #F0F2F5;
             border: none;
             border-radius: 8px;
@@ -144,12 +195,17 @@
         
         .apply-dates-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(123, 158, 179, 0.4);
+            box-shadow: 0 6px 20px rgba(96, 165, 250, 0.4);
+        }
+        
+        .apply-dates-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         .date-preview {
             font-size: 14px;
-            color: #6C757D;
+            color: var(--soft-text);
         }
         
         .google-controls {
@@ -170,34 +226,40 @@
             transition: all 0.2s ease;
         }
         
+        .google-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
         .google-btn.signin {
             background: #4285f4;
             color: white;
         }
         
         .google-btn.save {
-            background: linear-gradient(135deg, #7FA99B 0%, #6B8F82 100%);
-            color: #F0F2F5;
+            background: linear-gradient(135deg, var(--success-green) 0%, #22c55e 100%);
+            color: #1f2937;
         }
         
         .google-btn.load {
-            background: linear-gradient(135deg, #7B9EB3 0%, #6B7A8F 100%);
+            background: linear-gradient(135deg, var(--tech-blue) 0%, #3b82f6 100%);
             color: #F0F2F5;
         }
         
-        .google-btn:hover {
+        .google-btn:hover:not(:disabled) {
             transform: translateY(-2px);
         }
         
         .sync-status {
             text-align: center;
             font-size: 12px;
-            color: #B0B8C3;
+            color: var(--soft-text);
             margin-bottom: 15px;
+            min-height: 18px;
         }
         
-        .sync-status.success { color: #7FA99B; }
-        .sync-status.error { color: #A08B8B; }
+        .sync-status.success { color: var(--success-green); }
+        .sync-status.error { color: #ef4444; }
         
         .board {
             background: rgba(37, 41, 54, 0.6);
@@ -205,7 +267,7 @@
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             overflow: hidden;
-            border: 1px solid rgba(123, 158, 179, 0.15);
+            border: 1px solid rgba(96, 165, 250, 0.15);
         }
         
         .board-scroll-wrapper {
@@ -215,11 +277,11 @@
         .goals-bar {
             display: grid;
             grid-template-columns: 150px repeat(3, 1fr) 150px;
-            background: linear-gradient(135deg, rgba(107, 122, 143, 0.4) 0%, rgba(123, 158, 179, 0.3) 100%);
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.3) 0%, rgba(96, 165, 250, 0.2) 100%);
             padding: 15px;
             gap: 15px;
             min-width: 600px;
-            border-bottom: 1px solid rgba(123, 158, 179, 0.2);
+            border-bottom: 1px solid rgba(96, 165, 250, 0.2);
         }
         
         .goal-item {
@@ -287,7 +349,7 @@
             font-weight: 700;
             text-align: center;
             padding: 15px 10px;
-            border-bottom: 2px solid rgba(123, 158, 179, 0.3);
+            border-bottom: 2px solid rgba(96, 165, 250, 0.3);
         }
         
         .grid-row {
@@ -318,16 +380,40 @@
             align-items: center;
             justify-content: center;
             border-right: 1px solid var(--border-color);
+            position: relative;
         }
         
-        .appt-marker {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
+        .add-job-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px dashed var(--tech-blue);
+            background: rgba(96, 165, 250, 0.1);
+            color: var(--tech-blue);
+            font-weight: bold;
+        }
+        
+        .add-job-btn:hover {
+            transform: scale(1.1);
+            background: rgba(96, 165, 250, 0.2);
+            border-style: solid;
+        }
+        
+        /* Priority 3: Larger, clearer markers */
+        .appt-marker {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
             cursor: pointer;
             transition: all 0.2s;
             border: 2px dashed var(--border-color);
@@ -340,24 +426,24 @@
         }
         
         .appt-marker.filled {
-            background: linear-gradient(135deg, #7FA99B 0%, #6B8F82 100%);
-            color: #F0F2F5;
+            background: linear-gradient(135deg, var(--success-green) 0%, #22c55e 100%);
+            color: #1f2937;
             border-style: solid;
-            border-color: #7FA99B;
+            border-color: var(--success-green);
         }
         
         .appt-marker.priority {
-            background: linear-gradient(135deg, #B8A07E 0%, #A08F6D 100%);
-            color: #F0F2F5;
+            background: linear-gradient(135deg, var(--warning-yellow) 0%, #eab308 100%);
+            color: #1f2937;
             border-style: solid;
-            border-color: #B8A07E;
+            border-color: var(--warning-yellow);
         }
         
         .appt-marker.cancelled {
-            background: linear-gradient(135deg, #A08B8B 0%, #8B7575 100%);
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: #F0F2F5;
             border-style: solid;
-            border-color: #A08B8B;
+            border-color: #ef4444;
             position: relative;
         }
         
@@ -385,7 +471,7 @@
         
         .availability-info {
             font-size: 12px;
-            color: #6C757D;
+            color: var(--soft-text);
             font-weight: 500;
             font-family: 'Work Sans', sans-serif;
         }
@@ -406,25 +492,26 @@
             border-radius: 4px;
         }
         
+        /* Priority 4: Higher contrast progress badges */
         .goal-progress.met {
-            background: #D4EDDA;
-            color: #155724;
+            background: #10b981;
+            color: #f0fdf4;
         }
         
         .goal-progress.close {
-            background: #FFF3CD;
-            color: #856404;
+            background: #f59e0b;
+            color: #451a03;
         }
         
         .goal-progress.behind {
-            background: #F8D7DA;
-            color: #721C24;
+            background: #ef4444;
+            color: #fef2f2;
         }
         
         .cancellation-row {
             display: grid;
             grid-template-columns: 150px repeat(3, 1fr) 150px;
-            background: rgba(184, 160, 126, 0.15);
+            background: rgba(252, 211, 77, 0.15);
             border-top: 2px solid var(--warning-yellow);
             border-bottom: 2px solid var(--warning-yellow);
             padding: 10px 0;
@@ -469,19 +556,19 @@
         }
         
         .legend-box.complete {
-            background: #7FA99B;
-            color: white;
+            background: var(--success-green);
+            color: #1f2937;
         }
         
         .legend-box.priority {
-            background: #B8A07E;
-            color: white;
+            background: var(--warning-yellow);
+            color: #1f2937;
         }
         
         .notes-section {
             padding: 20px;
             background: rgba(42, 46, 61, 0.3);
-            border-top: 2px solid rgba(123, 158, 179, 0.3);
+            border-top: 2px solid rgba(96, 165, 250, 0.3);
         }
         
         .notes-header {
@@ -502,7 +589,7 @@
             background: rgba(37, 41, 54, 0.5);
             border-radius: 8px;
             padding: 15px;
-            border: 1px solid rgba(123, 158, 179, 0.2);
+            border: 1px solid rgba(96, 165, 250, 0.2);
         }
         
         .note-label {
@@ -528,11 +615,11 @@
         .note-input:focus {
             outline: none;
             border-color: var(--tech-blue);
-            box-shadow: 0 0 0 2px rgba(123, 158, 179, 0.2);
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
         }
         
         .note-input::placeholder {
-            color: #6C757D;
+            color: #6b7280;
         }
         
         .modal {
@@ -554,7 +641,7 @@
             padding: 30px;
             border-radius: 16px;
             min-width: 300px;
-            border: 2px solid rgba(123, 158, 179, 0.3);
+            border: 2px solid rgba(96, 165, 250, 0.3);
         }
         
         .modal-title {
@@ -581,27 +668,27 @@
         }
         
         .modal-btn.notice {
-            background: #7FA99B;
-            color: white;
+            background: var(--success-green);
+            color: #1f2937;
         }
         
         .modal-btn.priority {
-            background: #B8A07E;
-            color: white;
+            background: var(--warning-yellow);
+            color: #1f2937;
         }
         
         .modal-btn.cancel {
-            background: #A08B8B;
+            background: #ef4444;
             color: white;
         }
         
         .modal-btn.delete {
-            background: #721C24;
+            background: #dc2626;
             color: white;
         }
         
         .modal-btn.close {
-            background: #6C757D;
+            background: #6b7280;
             color: white;
         }
         
@@ -623,34 +710,38 @@
 <body>
     <div class="container">
         <div class="header">
+            <div class="auth-corner">
+                <span class="auth-status" id="authStatus" style="display: none;">●</span>
+                <button class="auth-corner-btn" id="authorizeButton" onclick="handleAuthClick()">
+                    Sign In
+                </button>
+                <button class="auth-corner-btn signout" id="signoutButton" onclick="handleSignoutClick()" style="display: none;">
+                    Sign Out
+                </button>
+            </div>
             <h1 class="title">3-DAY CALL BOARD</h1>
-            <p class="subtitle">☺ = Notice window given | P = Priority | C = Cancelled</p>
         </div>
         
         <div class="date-picker-section">
-            <label class="date-picker-label">Start Date:</label>
+            <!-- Priority 2: Associated label -->
+            <label class="date-picker-label" for="startDatePicker">Start Date:</label>
             <input type="date" class="date-picker-input" id="startDatePicker" />
             <button class="apply-dates-btn" onclick="applyStartDate()">Apply Dates</button>
             <div class="date-preview" id="datePreview"></div>
         </div>
         
-        <div class="google-controls">
-            <button class="google-btn signin" id="authorizeButton" onclick="handleAuthClick()">
-                🔐 Sign in with Google
+        <!-- Hidden Google controls - auto-save handles everything, UI moved to top right -->
+        <div class="google-controls" style="display: none;">
+            <button class="google-btn save" id="saveButton" onclick="saveToDrive(false)" disabled>
+                💾 Save Now
             </button>
-            <button class="google-btn save" id="saveButton" onclick="saveToDrive()" style="display: none;">
-                ☁️ Save to Drive
-            </button>
-            <button class="google-btn load" id="loadButton" onclick="loadFromDrive()" style="display: none;">
+            <button class="google-btn load" id="loadButton" onclick="loadFromDrive()" disabled>
                 📥 Load from Drive
             </button>
-            <button class="google-btn signin" id="signoutButton" onclick="handleSignoutClick()" style="display: none;">
-                🚪 Sign Out
-            </button>
         </div>
-        <div class="sync-status" id="syncStatus">Initializing...</div>
+        <div class="sync-status" id="syncStatus"></div>
         <div style="text-align: center; margin-bottom: 15px;">
-            <a href="https://drive.google.com/drive/folders/1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU" target="_blank" style="font-size: 11px; color: #7B9EB3; text-decoration: none;">
+            <a href="https://drive.google.com/drive/folders/1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU" target="_blank" style="font-size: 11px; color: var(--tech-blue); text-decoration: none;">
                 📁 View Drive Folder
             </a>
         </div>
@@ -677,7 +768,7 @@
                         <span>Priority</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-box" style="background: #A08B8B; color: white;">C</div>
+                        <div class="legend-box" style="background: #ef4444; color: white;">C</div>
                         <span>Cancelled</span>
                     </div>
                 </div>
@@ -690,7 +781,8 @@
         </div>
     </div>
     
-    <div class="modal" id="modal">
+    <!-- Priority 2: Modal accessibility attributes -->
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-content">
             <div class="modal-title" id="modalTitle"></div>
             <div class="modal-options">
@@ -699,6 +791,19 @@
                 <button class="modal-btn cancel" onclick="addAppointment('C')">C Cancelled</button>
                 <button class="modal-btn delete" onclick="addAppointment(null)">✕ Delete</button>
                 <button class="modal-btn close" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Job Modal -->
+    <div class="modal" id="addJobModal" role="dialog" aria-modal="true" aria-labelledby="addJobModalTitle">
+        <div class="modal-content">
+            <div class="modal-title" id="addJobModalTitle">Add New Job</div>
+            <div class="modal-options">
+                <button class="modal-btn notice" onclick="addNewJob('☺')">☺ Notice Given</button>
+                <button class="modal-btn priority" onclick="addNewJob('P')">P Priority</button>
+                <button class="modal-btn cancel" onclick="addNewJob('C')">C Cancelled</button>
+                <button class="modal-btn close" onclick="closeAddJobModal()">Cancel</button>
             </div>
         </div>
     </div>
@@ -724,8 +829,12 @@
         let currentTech = null;
         let currentDay = null;
         let currentIndex = null;
+        let previousFocus = null; // Priority 2: For focus restoration
+        let addJobTech = null; // For add job modal
+        let addJobDay = null;
+        let driveAutoSaveInterval = null; // Track auto-save interval
         
-        // Google Drive API
+        // Priority 1: Fixed Google OAuth callbacks (eliminated race conditions via onload)
         function gapiLoaded() {
             gapi.load('client', async () => {
                 await gapi.client.init({ discoveryDocs: DISCOVERY_DOCS });
@@ -740,15 +849,23 @@
                 scope: SCOPES,
                 callback: (resp) => {
                     if (resp.error) {
-                        showStatus('Auth failed', 'error');
+                        showStatus('Auth failed: ' + (resp.error_description || resp.error), 'error');
                         return;
                     }
-                    accessToken = gapi.client.getToken().access_token;
+                    // Priority 1: Correctly set token from response
+                    accessToken = resp.access_token;
+                    gapi.client.setToken({ access_token: resp.access_token });
+                    
+                    // Priority 1: Update UI state reliably
                     document.getElementById('signoutButton').style.display = 'inline-block';
                     document.getElementById('authorizeButton').style.display = 'none';
-                    document.getElementById('saveButton').style.display = 'inline-block';
-                    document.getElementById('loadButton').style.display = 'inline-block';
-                    showStatus('✓ Signed in', 'success');
+                    document.getElementById('authStatus').style.display = 'inline-block';
+                    document.getElementById('saveButton').disabled = false;
+                    document.getElementById('loadButton').disabled = false;
+                    showStatus('✓ Signed in - Auto-save enabled', 'success');
+                    
+                    // Start auto-save to Drive every 30 seconds
+                    startDriveAutoSave();
                 }
             });
             gisInited = true;
@@ -771,10 +888,16 @@
                 google.accounts.oauth2.revoke(token.access_token);
                 gapi.client.setToken('');
                 accessToken = null;
+                
+                // Stop auto-save interval
+                stopDriveAutoSave();
+                
+                // Priority 1: Correctly reset UI state
                 document.getElementById('authorizeButton').style.display = 'inline-block';
                 document.getElementById('signoutButton').style.display = 'none';
-                document.getElementById('saveButton').style.display = 'none';
-                document.getElementById('loadButton').style.display = 'none';
+                document.getElementById('authStatus').style.display = 'none';
+                document.getElementById('saveButton').disabled = true;
+                document.getElementById('loadButton').disabled = true;
                 showStatus('Signed out', 'success');
             }
         }
@@ -783,19 +906,47 @@
             const status = document.getElementById('syncStatus');
             status.textContent = message;
             status.className = 'sync-status ' + type;
-            setTimeout(() => {
-                status.textContent = '';
-                status.className = 'sync-status';
-            }, 3000);
+            if (message && type) {
+                setTimeout(() => {
+                    status.textContent = '';
+                    status.className = 'sync-status';
+                }, 5000);
+            }
         }
         
-        async function saveToDrive() {
+        // Auto-save to Drive functions
+        function startDriveAutoSave() {
+            // Clear any existing interval
+            if (driveAutoSaveInterval) {
+                clearInterval(driveAutoSaveInterval);
+            }
+            
+            // Save immediately on sign-in
+            saveToDrive(true);
+            
+            // Then save every 30 seconds
+            driveAutoSaveInterval = setInterval(() => {
+                saveToDrive(true);
+            }, 30000);
+        }
+        
+        function stopDriveAutoSave() {
+            if (driveAutoSaveInterval) {
+                clearInterval(driveAutoSaveInterval);
+                driveAutoSaveInterval = null;
+            }
+        }
+        
+        async function saveToDrive(isAutoSave = false) {
             if (!accessToken) {
                 showStatus('Please sign in first', 'error');
                 return;
             }
             
-            showStatus('Saving...', '');
+            // Only show "Saving..." for manual saves
+            if (!isAutoSave) {
+                showStatus('Saving...', '');
+            }
             
             try {
                 const summary = {
@@ -877,10 +1028,21 @@
                 } else {
                     await createFile(CALL_BOARD_FILENAME, fileContent);
                 }
-                showStatus('✓ Saved to Drive', 'success');
+                
+                // Show different messages for auto vs manual save
+                if (isAutoSave) {
+                    // Silent auto-save or brief indicator
+                    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    showStatus(`Auto-saved ${now}`, 'success');
+                } else {
+                    showStatus('✓ Saved to Drive', 'success');
+                }
             } catch (error) {
-                console.error('Save error:', error);
-                showStatus('✗ Save failed', 'error');
+                // Priority 1: Better error messages (no sensitive logging)
+                if (!isAutoSave) {
+                    showStatus('✗ Save failed: ' + (error.message || 'Unknown error'), 'error');
+                }
+                // Silent fail for auto-save to avoid spamming user
             }
         }
         
@@ -895,7 +1057,7 @@
             try {
                 const file = await findFile(CALL_BOARD_FILENAME);
                 if (!file) {
-                    showStatus('No data found', 'error');
+                    showStatus('No data found in Drive', 'error');
                     return;
                 }
                 
@@ -921,10 +1083,9 @@
                 }
                 
                 renderBoard();
-                showStatus('✓ Loaded', 'success');
+                showStatus('✓ Loaded from Drive', 'success');
             } catch (error) {
-                console.error('Load error:', error);
-                showStatus('✗ Load failed', 'error');
+                showStatus('✗ Load failed: ' + (error.message || 'Unknown error'), 'error');
             }
         }
         
@@ -954,6 +1115,10 @@
                 body: form
             });
             
+            if (!response.ok) {
+                throw new Error('Upload failed: ' + response.statusText);
+            }
+            
             return await response.json();
         }
         
@@ -967,15 +1132,22 @@
                 body: content
             });
             
+            if (!response.ok) {
+                throw new Error('Update failed: ' + response.statusText);
+            }
+            
             return await response.json();
         }
         
+        // Priority 1: Fixed downloadFile to return raw JSON string
         async function downloadFile(fileId) {
             const response = await gapi.client.drive.files.get({
                 fileId: fileId,
                 alt: 'media'
             });
-            return JSON.stringify(response.result);
+            
+            // Return raw body if available, otherwise stringify result
+            return response.body || JSON.stringify(response.result);
         }
         
         // Date functions
@@ -1009,22 +1181,34 @@
             }
         }
         
+        // Priority 3: Auto-apply today's date on first load
         function initializeDatePicker() {
             const today = new Date();
             const dateStr = today.toISOString().split('T')[0];
             document.getElementById('startDatePicker').value = dateStr;
             updateDatePreview();
+            applyStartDate(); // Auto-apply so board starts populated
         }
         
-        // Modal
+        // Priority 2: Modal with accessibility improvements
         function openModal(tech, day, index) {
             currentTech = tech;
             currentDay = day;
             currentIndex = index;
             
+            // Store previous focus for restoration
+            previousFocus = document.activeElement;
+            
             const dayLabel = days.find(d => d.id === day).label;
             document.getElementById('modalTitle').textContent = `${tech} - ${dayLabel}`;
-            document.getElementById('modal').style.display = 'flex';
+            const modal = document.getElementById('modal');
+            modal.style.display = 'flex';
+            
+            // Focus first button
+            setTimeout(() => {
+                const firstButton = modal.querySelector('.modal-btn');
+                if (firstButton) firstButton.focus();
+            }, 100);
         }
         
         function closeModal() {
@@ -1032,6 +1216,12 @@
             currentTech = null;
             currentDay = null;
             currentIndex = null;
+            
+            // Restore focus
+            if (previousFocus) {
+                previousFocus.focus();
+                previousFocus = null;
+            }
         }
         
         function addAppointment(type) {
@@ -1043,6 +1233,70 @@
                 }
                 renderBoard();
                 closeModal();
+            }
+        }
+        
+        // Priority 2: Keyboard and backdrop handlers for modal
+        document.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('modal');
+            const addJobModal = document.getElementById('addJobModal');
+            if (modal.style.display === 'flex' && e.key === 'Escape') {
+                closeModal();
+            }
+            if (addJobModal.style.display === 'flex' && e.key === 'Escape') {
+                closeAddJobModal();
+            }
+        });
+        
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeModal();
+            }
+        });
+        
+        document.getElementById('addJobModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeAddJobModal();
+            }
+        });
+        
+        // Add Job Modal Functions
+        function openAddJobModal(tech, day) {
+            addJobTech = tech;
+            addJobDay = day;
+            
+            previousFocus = document.activeElement;
+            
+            const dayLabel = days.find(d => d.id === day).label;
+            document.getElementById('addJobModalTitle').textContent = `Add Job: ${tech} - ${dayLabel}`;
+            const modal = document.getElementById('addJobModal');
+            modal.style.display = 'flex';
+            
+            setTimeout(() => {
+                const firstButton = modal.querySelector('.modal-btn');
+                if (firstButton) firstButton.focus();
+            }, 100);
+        }
+        
+        function closeAddJobModal() {
+            document.getElementById('addJobModal').style.display = 'none';
+            addJobTech = null;
+            addJobDay = null;
+            
+            if (previousFocus) {
+                previousFocus.focus();
+                previousFocus = null;
+            }
+        }
+        
+        function addNewJob(type) {
+            if (addJobTech && addJobDay) {
+                if (!data[addJobTech][addJobDay]) {
+                    data[addJobTech][addJobDay] = [];
+                }
+                data[addJobTech][addJobDay].push(type);
+                renderBoard();
+                closeAddJobModal();
             }
         }
         
@@ -1074,22 +1328,41 @@
                 const arrows = document.createElement('div');
                 arrows.className = 'goal-arrows';
                 
+                // Priority 2: Keyboard-accessible arrow buttons
                 const upArrow = document.createElement('div');
                 upArrow.className = 'arrow-btn';
                 upArrow.textContent = '▲';
+                upArrow.setAttribute('role', 'button');
+                upArrow.setAttribute('tabindex', '0');
+                upArrow.setAttribute('aria-label', `Increase goal for ${day.label}`);
                 upArrow.onclick = () => {
                     days[index].goal = Math.max(0, days[index].goal + 1);
                     renderGoalsBar();
                     updateTotals();
                 };
+                upArrow.onkeydown = (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        upArrow.onclick();
+                    }
+                };
                 
                 const downArrow = document.createElement('div');
                 downArrow.className = 'arrow-btn';
                 downArrow.textContent = '▼';
+                downArrow.setAttribute('role', 'button');
+                downArrow.setAttribute('tabindex', '0');
+                downArrow.setAttribute('aria-label', `Decrease goal for ${day.label}`);
                 downArrow.onclick = () => {
                     days[index].goal = Math.max(0, days[index].goal - 1);
                     renderGoalsBar();
                     updateTotals();
+                };
+                downArrow.onkeydown = (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        downArrow.onclick();
+                    }
                 };
                 
                 arrows.appendChild(upArrow);
@@ -1160,20 +1433,52 @@
                         const marker = document.createElement('div');
                         marker.className = 'appt-marker';
                         
+                        // Priority 2: Keyboard-accessible markers
+                        marker.setAttribute('role', 'button');
+                        marker.setAttribute('tabindex', '0');
+                        
                         if (appt === '☺') {
                             marker.classList.add('filled');
                             marker.textContent = '☺';
+                            marker.setAttribute('aria-label', 'Appointment: Notice given');
                         } else if (appt === 'P') {
                             marker.classList.add('priority');
                             marker.textContent = 'P';
+                            marker.setAttribute('aria-label', 'Appointment: Priority');
                         } else if (appt === 'C') {
                             marker.classList.add('cancelled');
                             marker.textContent = 'C';
+                            marker.setAttribute('aria-label', 'Appointment: Cancelled');
+                        } else {
+                            marker.setAttribute('aria-label', 'Empty appointment slot');
                         }
                         
                         marker.onclick = () => openModal(tech, day.id, index);
+                        marker.onkeydown = (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                openModal(tech, day.id, index);
+                            }
+                        };
+                        
                         dayCell.appendChild(marker);
                     });
+                    
+                    // Add "+" button to add new jobs
+                    const addBtn = document.createElement('div');
+                    addBtn.className = 'add-job-btn';
+                    addBtn.textContent = '+';
+                    addBtn.setAttribute('role', 'button');
+                    addBtn.setAttribute('tabindex', '0');
+                    addBtn.setAttribute('aria-label', `Add job for ${tech} on ${day.label}`);
+                    addBtn.onclick = () => openAddJobModal(tech, day.id);
+                    addBtn.onkeydown = (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            openAddJobModal(tech, day.id);
+                        }
+                    };
+                    dayCell.appendChild(addBtn);
                     
                     row.appendChild(dayCell);
                 });
@@ -1205,51 +1510,55 @@
             });
         }
         
+        // Priority 3: Build structure once, update numbers only in updateTotals
         function renderDailyTotals() {
             const totalsRow = document.getElementById('dailyTotalsRow');
-            totalsRow.innerHTML = '';
-            totalsRow.style.gridTemplateColumns = `150px repeat(${days.length}, 1fr) 150px`;
             
-            const label = document.createElement('div');
-            label.className = 'tech-name';
-            label.textContent = 'Daily Totals';
-            totalsRow.appendChild(label);
-            
-            days.forEach(day => {
-                const cell = document.createElement('div');
-                cell.className = 'total-cell';
-                cell.id = `total-${day.id}`;
+            // Only build structure if empty (prevents flicker/double-render)
+            if (totalsRow.children.length === 0) {
+                totalsRow.style.gridTemplateColumns = `150px repeat(${days.length}, 1fr) 150px`;
                 
-                const totalNum = document.createElement('div');
-                totalNum.className = 'total-number';
-                totalNum.textContent = '0';
-                cell.appendChild(totalNum);
+                const label = document.createElement('div');
+                label.className = 'tech-name';
+                label.textContent = 'Daily Totals';
+                totalsRow.appendChild(label);
                 
-                const progress = document.createElement('div');
-                progress.className = 'goal-progress';
-                progress.id = `progress-${day.id}`;
-                progress.textContent = `0/${day.goal}`;
-                cell.appendChild(progress);
+                days.forEach(day => {
+                    const cell = document.createElement('div');
+                    cell.className = 'total-cell';
+                    cell.id = `total-${day.id}`;
+                    
+                    const totalNum = document.createElement('div');
+                    totalNum.className = 'total-number';
+                    totalNum.textContent = '0';
+                    cell.appendChild(totalNum);
+                    
+                    const progress = document.createElement('div');
+                    progress.className = 'goal-progress';
+                    progress.id = `progress-${day.id}`;
+                    progress.textContent = `0/${day.goal}`;
+                    cell.appendChild(progress);
+                    
+                    totalsRow.appendChild(cell);
+                });
                 
-                totalsRow.appendChild(cell);
-            });
-            
-            const grandTotal = document.createElement('div');
-            grandTotal.className = 'total-cell';
-            grandTotal.id = 'grand-total';
-            
-            const grandNum = document.createElement('div');
-            grandNum.className = 'total-number';
-            grandNum.textContent = '0';
-            grandTotal.appendChild(grandNum);
-            
-            const grandProgress = document.createElement('div');
-            grandProgress.className = 'goal-progress';
-            grandProgress.id = 'grand-progress';
-            grandProgress.textContent = '0/27';
-            grandTotal.appendChild(grandProgress);
-            
-            totalsRow.appendChild(grandTotal);
+                const grandTotal = document.createElement('div');
+                grandTotal.className = 'total-cell';
+                grandTotal.id = 'grand-total';
+                
+                const grandNum = document.createElement('div');
+                grandNum.className = 'total-number';
+                grandNum.textContent = '0';
+                grandTotal.appendChild(grandNum);
+                
+                const grandProgress = document.createElement('div');
+                grandProgress.className = 'goal-progress';
+                grandProgress.id = 'grand-progress';
+                grandProgress.textContent = '0/27';
+                grandTotal.appendChild(grandProgress);
+                
+                totalsRow.appendChild(grandTotal);
+            }
         }
         
         function renderCancellationRow() {
@@ -1313,8 +1622,10 @@
                 
                 const noteInput = document.createElement('textarea');
                 noteInput.className = 'note-input';
+                noteInput.id = `note-${day.id}`;
                 noteInput.placeholder = placeholders[index] || placeholders[0];
                 noteInput.value = day.notes || '';
+                noteInput.setAttribute('aria-label', `Notes for ${day.label} ${day.date}`);
                 noteInput.oninput = (e) => {
                     days[index].notes = e.target.value;
                 };
@@ -1335,8 +1646,6 @@
         }
         
         function updateTotals() {
-            renderDailyTotals();
-            
             let overallGoal = 0;
             
             days.forEach(day => {
@@ -1404,18 +1713,11 @@
             renderGoalsBar();
             renderHeader();
             renderTechRows();
-            renderDailyTotals();
+            renderDailyTotals(); // Builds structure once
             renderCancellationRow();
             renderNotes();
-            updateTotals();
+            updateTotals(); // Updates numbers only
         }
-        
-        // Initialize
-        window.addEventListener('load', () => {
-            gapiLoaded();
-            gisLoaded();
-            loadFromLocal();
-        });
         
         // Auto-save to browser localStorage
         function saveToLocal() {
@@ -1456,7 +1758,7 @@
                 
                 renderBoard();
             } catch (error) {
-                console.error('Load from local storage failed:', error);
+                // Silent fail for localStorage - not critical
             }
         }
         
@@ -1470,8 +1772,11 @@
             saveToLocal();
         });
         
-        initializeDatePicker();
-        renderBoard();
+        // Initialize app
+        window.addEventListener('load', () => {
+            loadFromLocal();
+            initializeDatePicker(); // Auto-applies today's date
+        });
     </script>
 </body>
 </html>
