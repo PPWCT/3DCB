@@ -2,18 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3-Day Call Board</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Work+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
     <script>
-        // Google Drive API Configuration
         const CLIENT_ID = '31947493557-aqbcb8n3fag89rcjnchj5p6gufuh1oda.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/drive.file';
         const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
         const CALL_BOARD_FILENAME = '3day-call-board-data.json';
-        const DRIVE_FOLDER_ID = '1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU'; // Your specific folder
+        const DRIVE_FOLDER_ID = '1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU';
         
         let gapiInited = false;
         let gisInited = false;
@@ -23,37 +22,22 @@
     <style>
         :root {
             --primary-red: #9FA8B8;
-            --dark-red: #6B7A8F;
             --light-bg: #1A1D26;
-            --white: #252936;
-            --text-dark: #D4D9E3;
+            --text-color: #D4D9E3;
             --border-color: #343847;
             --success-green: #7FA99B;
             --warning-yellow: #B8A07E;
             --tech-blue: #7B9EB3;
             --cancel-red: #A08B8B;
-            --row-hover: #2A2E3D;
-            --tactical-green: #8FA699;
-            --tactical-tan: #D4D9E3;
-            --tactical-gray: #6B7A8F;
-            --tactical-black: #1A1D26;
-            --camo-dark: #21242E;
             --dark-bg: #13151C;
             --soft-text: #B0B8C3;
             --glow-blue: rgba(123, 158, 179, 0.15);
-            --glow-purple: rgba(159, 168, 184, 0.12);
         }
         
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        html {
-            -webkit-text-size-adjust: 100%;
-            touch-action: manipulation;
         }
         
         body {
@@ -61,9 +45,8 @@
             background: #13151C;
             padding: 20px;
             min-height: 100vh;
-            color: var(--text-dark);
+            color: var(--text-color);
             position: relative;
-            overflow-x: hidden;
         }
         
         body::before {
@@ -75,22 +58,15 @@
             height: 200%;
             background: 
                 radial-gradient(circle at 30% 40%, var(--glow-blue) 0%, transparent 40%),
-                radial-gradient(circle at 70% 60%, var(--glow-purple) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(123, 158, 179, 0.08) 0%, transparent 50%);
+                radial-gradient(circle at 70% 60%, rgba(159, 168, 184, 0.12) 0%, transparent 40%);
             animation: gentleBreath 8s ease-in-out infinite;
             pointer-events: none;
             z-index: 0;
         }
         
         @keyframes gentleBreath {
-            0%, 100% {
-                opacity: 0.6;
-                transform: scale(1) rotate(0deg);
-            }
-            50% {
-                opacity: 0.9;
-                transform: scale(1.05) rotate(2deg);
-            }
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(1.05); }
         }
         
         .container {
@@ -111,26 +87,14 @@
             color: #B0B8C3;
             letter-spacing: 8px;
             margin-bottom: 5px;
-            text-shadow: 
-                0 0 20px rgba(123, 158, 179, 0.3),
-                0 0 40px rgba(159, 168, 184, 0.2);
-            font-weight: 400;
+            text-shadow: 0 0 20px rgba(123, 158, 179, 0.3);
         }
         
         .subtitle {
             font-size: 14px;
-            color: var(--text-dark);
-            font-style: italic;
-        }
-        
-        .date-display {
-            display: inline-block;
-            background: var(--white); color: var(--text-dark);
-            padding: 8px 20px;
-            border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin-top: 10px;
+            color: var(--text-color);
             font-weight: 600;
+            opacity: 0.9;
         }
         
         .date-picker-section {
@@ -138,9 +102,7 @@
             backdrop-filter: blur(10px);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 
-                0 4px 20px rgba(0,0,0,0.2),
-                0 0 40px rgba(123, 158, 179, 0.08);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             margin-bottom: 20px;
             display: flex;
             align-items: center;
@@ -152,8 +114,7 @@
         
         .date-picker-label {
             font-weight: 700;
-            color: var(--text-dark);
-            font-size: 16px;
+            color: var(--text-color);
         }
         
         .date-picker-input {
@@ -162,20 +123,9 @@
             border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
-            color: var(--text-dark);
+            color: var(--text-color);
+            background: rgba(37, 41, 54, 0.6);
             cursor: pointer;
-            transition: all 0.2s ease;
-            min-width: 150px;
-        }
-        
-        .date-picker-input:hover {
-            border-color: var(--primary-red);
-        }
-        
-        .date-picker-input:focus {
-            outline: none;
-            border-color: var(--primary-red);
-            box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1);
         }
         
         .apply-dates-btn {
@@ -190,31 +140,23 @@
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            box-shadow: 0 4px 15px rgba(123, 158, 179, 0.3);
         }
         
         .apply-dates-btn:hover {
-            background: linear-gradient(135deg, #8FAEC3 0%, #7B8A9F 100%);
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(123, 158, 179, 0.4);
-        }
-        
-        .apply-dates-btn:active {
-            transform: translateY(0);
         }
         
         .date-preview {
             font-size: 14px;
             color: #6C757D;
-            font-weight: 500;
         }
         
         .google-controls {
             display: flex;
             gap: 10px;
-            align-items: center;
             justify-content: center;
-            margin-top: 20px;
+            margin-bottom: 15px;
             flex-wrap: wrap;
         }
         
@@ -224,11 +166,8 @@
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.2s ease;
             border: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            transition: all 0.2s ease;
         }
         
         .google-btn.signin {
@@ -236,19 +175,9 @@
             color: white;
         }
         
-        .google-btn.signin:hover {
-            background: #357ae8;
-            transform: translateY(-2px);
-        }
-        
         .google-btn.save {
             background: linear-gradient(135deg, #7FA99B 0%, #6B8F82 100%);
             color: #F0F2F5;
-        }
-        
-        .google-btn.save:hover {
-            background: linear-gradient(135deg, #8FBAA8 0%, #7B9F92 100%);
-            transform: translateY(-2px);
         }
         
         .google-btn.load {
@@ -256,46 +185,31 @@
             color: #F0F2F5;
         }
         
-        .google-btn.load:hover {
-            background: linear-gradient(135deg, #8BAEC3 0%, #7B8A9F 100%);
+        .google-btn:hover {
             transform: translateY(-2px);
         }
         
-        .google-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
         .sync-status {
+            text-align: center;
             font-size: 12px;
             color: #B0B8C3;
-            text-align: center;
-            margin-top: 10px;
+            margin-bottom: 15px;
         }
         
-        .sync-status.success {
-            color: #7FA99B;
-        }
-        
-        .sync-status.error {
-            color: #A08B8B;
-        }
+        .sync-status.success { color: #7FA99B; }
+        .sync-status.error { color: #A08B8B; }
         
         .board {
             background: rgba(37, 41, 54, 0.6);
             backdrop-filter: blur(10px);
-            color: var(--text-dark);
             border-radius: 16px;
-            box-shadow: 
-                0 8px 32px rgba(0,0,0,0.3),
-                0 0 60px rgba(123, 158, 179, 0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             overflow: hidden;
             border: 1px solid rgba(123, 158, 179, 0.15);
         }
         
         .board-scroll-wrapper {
             overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
         }
         
         .goals-bar {
@@ -310,35 +224,30 @@
         
         .goal-item {
             text-align: center;
-            color: var(--white);
         }
         
         .goal-item.empty {
-            opacity: 0.4;
+            background: transparent;
         }
         
         .goal-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.9;
-            margin-bottom: 5px;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 8px;
         }
         
         .goal-value {
-            font-family: 'Bebas Neue', cursive;
-            font-size: 32px;
-            letter-spacing: 2px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
         
         .goal-number {
-            min-width: 40px;
-            text-align: center;
+            font-family: 'Bebas Neue', cursive;
+            font-size: 32px;
+            color: #F0F2F5;
         }
         
         .goal-arrows {
@@ -349,97 +258,66 @@
         
         .arrow-btn {
             width: 24px;
-            height: 20px;
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
-            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--text-dark);
-            font-size: 12px;
-            transition: all 0.2s ease;
-            user-select: none;
+            cursor: pointer;
+            font-size: 10px;
+            color: var(--text-color);
+            transition: all 0.2s;
         }
         
         .arrow-btn:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.2);
             transform: scale(1.1);
         }
         
-        .editable-date {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 4px;
-            padding: 2px 8px;
-            color: var(--text-dark);
-            font-weight: 600;
-            text-align: center;
-            width: 45px;
-            outline: none;
-            font-size: inherit;
-            min-height: 24px;
-        }
-        
-        .editable-date:focus {
-            background: rgba(255,255,255,0.4);
-            border-color: rgba(255,255,255,0.6);
+        .grid-container {
+            min-width: 600px;
         }
         
         .grid-header {
             display: grid;
             grid-template-columns: 150px repeat(3, 1fr) 150px;
-            background: var(--text-dark);
-            color: var(--white);
-            padding: 12px 15px;
-            gap: 15px;
+            background: rgba(28, 61, 90, 0.6);
+            color: var(--text-color);
             font-weight: 700;
-            text-transform: uppercase;
-            font-size: 13px;
-            letter-spacing: 1px;
-            min-width: 600px;
-        }
-        
-        .grid-header div {
             text-align: center;
-        }
-        
-        .grid-header div:first-child {
-            text-align: left;
+            padding: 15px 10px;
+            border-bottom: 2px solid rgba(123, 158, 179, 0.3);
         }
         
         .grid-row {
             display: grid;
             grid-template-columns: 150px repeat(3, 1fr) 150px;
-            gap: 15px;
-            padding: 18px 15px;
             border-bottom: 1px solid var(--border-color);
-            transition: all 0.2s ease;
-            min-width: 600px;
-            background: rgba(37, 41, 54, 0.6);
+            min-height: 80px;
         }
         
         .grid-row:hover {
-            background: var(--row-hover);
+            background: rgba(42, 46, 61, 0.3);
         }
         
         .tech-name {
+            padding: 20px;
             font-weight: 700;
             color: var(--tech-blue);
             display: flex;
             align-items: center;
-            font-family: 'Bebas Neue', cursive;
-            letter-spacing: 1px;
-            font-size: 24px;
+            border-right: 1px solid var(--border-color);
         }
         
-        .appointment-cell {
+        .day-cell {
+            padding: 10px;
             display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            flex-wrap: wrap;
+            border-right: 1px solid var(--border-color);
         }
         
         .appt-marker {
@@ -449,57 +327,47 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 20px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
-            font-weight: 600;
+            transition: all 0.2s;
+            border: 2px dashed var(--border-color);
+            background: rgba(255, 255, 255, 0.05);
         }
         
-        .appt-marker.empty {
-            background: #F8F9FA;
-            border: 2px dashed #CED4DA;
-            color: #ADB5BD;
-            font-size: 24px;
-        }
-        
-        .appt-marker.empty:hover {
-            background: #E9ECEF;
-            border-color: var(--tech-blue);
-            color: var(--tech-blue);
+        .appt-marker:hover {
+            transform: scale(1.1);
+            border-style: solid;
         }
         
         .appt-marker.filled {
-            background: var(--success-green);
-            color: var(--white);
-            box-shadow: 0 2px 8px rgba(42, 157, 143, 0.25);
+            background: linear-gradient(135deg, #7FA99B 0%, #6B8F82 100%);
+            color: #F0F2F5;
+            border-style: solid;
+            border-color: #7FA99B;
         }
         
         .appt-marker.priority {
-            background: var(--warning-yellow);
-            color: var(--white);
-            box-shadow: 0 2px 8px rgba(244, 162, 97, 0.25);
+            background: linear-gradient(135deg, #B8A07E 0%, #A08F6D 100%);
+            color: #F0F2F5;
+            border-style: solid;
+            border-color: #B8A07E;
         }
         
         .appt-marker.cancelled {
-            background: var(--cancel-red);
-            color: var(--white);
-            box-shadow: 0 2px 8px rgba(231, 111, 81, 0.25);
+            background: linear-gradient(135deg, #A08B8B 0%, #8B7575 100%);
+            color: #F0F2F5;
+            border-style: solid;
+            border-color: #A08B8B;
             position: relative;
         }
         
         .appt-marker.cancelled::after {
             content: '';
             position: absolute;
-            width: 32px;
+            width: 100%;
             height: 2px;
-            background: rgba(37, 41, 54, 0.6);
+            background: white;
             transform: rotate(-45deg);
-        }
-        
-        .appt-marker:not(.empty):hover {
-            transform: scale(1.08);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         
         .total-cell {
@@ -508,7 +376,6 @@
             font-size: 32px;
             color: var(--primary-red);
             font-family: 'Bebas Neue', cursive;
-            letter-spacing: 1px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -516,8 +383,19 @@
             gap: 4px;
         }
         
-        .total-number {
-            font-size: 32px;
+        .availability-info {
+            font-size: 12px;
+            color: #6C757D;
+            font-weight: 500;
+            font-family: 'Work Sans', sans-serif;
+        }
+        
+        .daily-totals-row {
+            display: grid;
+            grid-template-columns: 150px repeat(3, 1fr) 150px;
+            background: rgba(42, 46, 61, 0.5);
+            border-top: 3px solid var(--tech-blue);
+            border-bottom: 3px solid var(--tech-blue);
         }
         
         .goal-progress {
@@ -543,258 +421,118 @@
             color: #721C24;
         }
         
-        .availability-info {
-            font-size: 12px;
-            color: #6C757D;
-            font-weight: 500;
-            margin-top: 4px;
-            font-family: 'Work Sans', sans-serif;
-        }
-        
-        .daily-totals {
-            background: linear-gradient(135deg, #FFF9E6 0%, #FFE5B4 100%);
-            font-weight: 700;
-            border-bottom: none;
-            border-top: 3px solid var(--primary-red);
-            padding: 20px 15px;
-        }
-        
-        .daily-totals .tech-name {
-            color: var(--dark-red);
-            font-size: 22px;
-        }
-        
-        .daily-totals .total-cell {
-            font-size: 36px;
-        }
-        
         .cancellation-row {
-            background: #FFF8E1;
-            border-bottom: 2px solid #FFD54F;
-            border-top: 2px solid #FFD54F;
+            display: grid;
+            grid-template-columns: 150px repeat(3, 1fr) 150px;
+            background: rgba(184, 160, 126, 0.15);
+            border-top: 2px solid var(--warning-yellow);
+            border-bottom: 2px solid var(--warning-yellow);
+            padding: 10px 0;
         }
         
-        .cancellation-row .tech-name {
-            color: var(--dark-red);
-            font-size: 18px;
-        }
-        
-        .cancel-factor-cell {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .cancel-factor-display {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--dark-red);
-            font-family: 'Work Sans', sans-serif;
-        }
-        
-        .cancel-total {
-            font-size: 20px !important;
-            color: var(--dark-red) !important;
-        }
-        
-        .custom-row {
-            background: #f0f4ff;
-            border-bottom: 2px dashed var(--border-color);
-        }
-        
-        .custom-row-name {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .custom-row-name-input {
-            flex: 1;
-            padding: 6px 10px;
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 16px;
-            font-family: 'Bebas Neue', cursive;
-            font-weight: 700;
-            color: var(--tech-blue);
-            letter-spacing: 1px;
-            outline: none;
-            background: rgba(37, 41, 54, 0.6);
-        }
-        
-        .delete-row-btn {
-            width: 28px;
-            height: 28px;
-            background: var(--primary-red);
-            color: var(--text-dark);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 20px;
-            font-weight: bold;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-        }
-        
-        .delete-row-btn:hover {
-            background: var(--dark-red);
-            transform: scale(1.1);
-        }
-        
-        .custom-cell {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .custom-cell-input {
-            width: 100%;
-            max-width: 120px;
-            padding: 8px;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 14px;
+        .cancel-cell {
             text-align: center;
+            font-size: 14px;
+            color: var(--text-color);
             font-weight: 600;
-            color: var(--text-dark);
-            outline: none;
-            background: rgba(37, 41, 54, 0.6);
-        }
-        
-        .custom-cell-input:focus {
-            border-color: var(--tech-blue);
-            box-shadow: 0 0 0 3px rgba(69, 123, 157, 0.1);
+            padding: 5px;
         }
         
         .footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            background: var(--light-bg);
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .cancellation-tracker {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .cancel-label {
-            font-weight: 700;
-            color: var(--primary-red);
-            text-transform: uppercase;
-            font-size: 14px;
-            letter-spacing: 1px;
-        }
-        
-        .cancel-count {
-            background: var(--white); color: var(--text-dark);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 24px;
-            color: var(--primary-red);
-            border: 2px solid var(--primary-red);
-            min-width: 60px;
+            padding: 20px;
             text-align: center;
-            outline: none;
-        }
-        
-        .add-row-btn {
-            background: var(--tech-blue);
-            color: var(--text-dark);
-            padding: 12px 24px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-        }
-        
-        .add-row-btn:hover {
-            background: var(--text-dark);
-            transform: translateY(-2px);
-        }
-        
-        .control-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            border: 2px solid;
-            background: rgba(37, 41, 54, 0.6);
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.2s ease;
-            margin-left: 6px;
-            vertical-align: middle;
-        }
-        
-        .control-btn.add {
-            border-color: var(--success-green);
-            color: var(--success-green);
-        }
-        
-        .control-btn.add:hover {
-            background: var(--success-green);
-            color: var(--text-dark);
-            transform: scale(1.15);
-        }
-        
-        .control-btn.remove {
-            border-color: var(--primary-red);
-            color: var(--primary-red);
-            font-size: 14px;
-        }
-        
-        .control-btn.remove:hover {
-            background: var(--primary-red);
-            color: var(--text-dark);
-            transform: scale(1.15);
+            background: rgba(37, 41, 54, 0.3);
         }
         
         .legend {
             display: flex;
             gap: 20px;
             align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
         }
         
         .legend-item {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 14px;
         }
         
         .legend-box {
-            width: 30px;
-            height: 30px;
-            border-radius: 8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            color: var(--text-dark);
+            font-size: 14px;
         }
         
         .legend-box.complete {
-            background: var(--success-green);
+            background: #7FA99B;
+            color: white;
         }
         
         .legend-box.priority {
-            background: var(--warning-yellow);
+            background: #B8A07E;
+            color: white;
+        }
+        
+        .notes-section {
+            padding: 20px;
+            background: rgba(42, 46, 61, 0.3);
+            border-top: 2px solid rgba(123, 158, 179, 0.3);
+        }
+        
+        .notes-header {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .notes-grid {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+        
+        .note-item {
+            background: rgba(37, 41, 54, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid rgba(123, 158, 179, 0.2);
+        }
+        
+        .note-label {
+            font-weight: 700;
+            color: var(--tech-blue);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .note-input {
+            width: 100%;
+            background: rgba(26, 29, 38, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            color: var(--text-color);
+            font-family: 'Work Sans', sans-serif;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .note-input:focus {
+            outline: none;
+            border-color: var(--tech-blue);
+            box-shadow: 0 0 0 2px rgba(123, 158, 179, 0.2);
+        }
+        
+        .note-input::placeholder {
+            color: #6C757D;
         }
         
         .modal {
@@ -804,103 +542,80 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.8);
             z-index: 1000;
             align-items: center;
             justify-content: center;
         }
         
-        .modal.active {
-            display: flex;
-        }
-        
         .modal-content {
-            background: var(--white); color: var(--text-dark);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 400px;
+            background: rgba(37, 41, 54, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 16px;
+            min-width: 300px;
+            border: 2px solid rgba(123, 158, 179, 0.3);
         }
         
         .modal-title {
-            font-family: 'Bebas Neue', cursive;
-            font-size: 32px;
-            color: var(--primary-red);
+            font-size: 20px;
+            font-weight: 700;
             margin-bottom: 20px;
-            text-align: center;
+            color: var(--text-color);
         }
         
         .modal-options {
             display: flex;
+            gap: 15px;
             flex-direction: column;
-            gap: 12px;
         }
         
-        .modal-option {
+        .modal-btn {
             padding: 15px;
-            border-radius: 10px;
-            border: 2px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 600;
-            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
         }
         
-        .modal-option:hover {
-            transform: translateX(5px);
-            border-color: var(--primary-red);
-            background: var(--light-bg);
+        .modal-btn.notice {
+            background: #7FA99B;
+            color: white;
         }
         
-        .modal-option.delete {
-            background: #fee;
-            border-color: var(--primary-red);
-            color: var(--primary-red);
+        .modal-btn.priority {
+            background: #B8A07E;
+            color: white;
         }
         
-        .modal-option.delete:hover {
-            background: var(--primary-red);
-            color: var(--text-dark);
+        .modal-btn.cancel {
+            background: #A08B8B;
+            color: white;
+        }
+        
+        .modal-btn.delete {
+            background: #721C24;
+            color: white;
+        }
+        
+        .modal-btn.close {
+            background: #6C757D;
+            color: white;
+        }
+        
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
         }
         
         @media (max-width: 768px) {
             .title {
-                font-size: 32px;
+                font-size: 36px;
             }
-            
-            .subtitle {
-                font-size: 11px;
-            }
-            
-            .footer {
+            .date-picker-section {
                 flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .cancellation-tracker {
-                justify-content: space-between;
-            }
-            
-            .add-row-btn {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .legend {
-                justify-content: center;
-            }
-        }
-        
-        @media (hover: none) and (pointer: coarse) {
-            .appt-marker {
-                min-width: 44px;
-                min-height: 44px;
-            }
-            
-            .arrow-btn {
-                min-width: 32px;
-                min-height: 28px;
             }
         }
     </style>
@@ -909,13 +624,13 @@
     <div class="container">
         <div class="header">
             <h1 class="title">3-DAY CALL BOARD</h1>
-            <p class="subtitle">☺ = Notice window given from homeowner | Apps marked with (P) are priority</p>
+            <p class="subtitle">☺ = Notice window given | P = Priority | C = Cancelled</p>
         </div>
         
         <div class="date-picker-section">
             <label class="date-picker-label">Start Date:</label>
             <input type="date" class="date-picker-input" id="startDatePicker" />
-            <button class="apply-dates-btn" onclick="window.applyStartDate()">Apply Dates</button>
+            <button class="apply-dates-btn" onclick="applyStartDate()">Apply Dates</button>
             <div class="date-preview" id="datePreview"></div>
         </div>
         
@@ -933,8 +648,8 @@
                 🚪 Sign Out
             </button>
         </div>
-        <div class="sync-status" id="syncStatus">Initializing Google Drive...</div>
-        <div style="text-align: center; margin-top: 5px;">
+        <div class="sync-status" id="syncStatus">Initializing...</div>
+        <div style="text-align: center; margin-bottom: 15px;">
             <a href="https://drive.google.com/drive/folders/1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU" target="_blank" style="font-size: 11px; color: #7B9EB3; text-decoration: none;">
                 📁 View Drive Folder
             </a>
@@ -943,12 +658,12 @@
         <div class="board">
             <div class="board-scroll-wrapper">
                 <div class="goals-bar" id="goalsBar"></div>
-                
-                <div class="grid-header" id="gridHeader"></div>
-            
-            <div id="techRows"></div>
-            
-            <div class="grid-row daily-totals" id="dailyTotalsRow"></div>
+                <div class="grid-container">
+                    <div class="grid-header" id="gridHeader"></div>
+                    <div id="techRows"></div>
+                    <div class="daily-totals-row" id="dailyTotalsRow"></div>
+                    <div class="cancellation-row" id="cancellationRow"></div>
+                </div>
             </div>
             
             <div class="footer">
@@ -962,54 +677,79 @@
                         <span>Priority</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-box" style="background: #ff6b6b; color: var(--text-dark);">C</div>
+                        <div class="legend-box" style="background: #A08B8B; color: white;">C</div>
                         <span>Cancelled</span>
                     </div>
                 </div>
+            </div>
+            
+            <div class="notes-section">
+                <div class="notes-header">📝 Daily Notes</div>
+                <div class="notes-grid" id="notesGrid"></div>
             </div>
         </div>
     </div>
     
     <div class="modal" id="modal">
         <div class="modal-content">
-            <h2 class="modal-title">Mark Appointment</h2>
+            <div class="modal-title" id="modalTitle"></div>
             <div class="modal-options">
-                <div class="modal-option" data-value="☺">☺ Notice Given</div>
-                <div class="modal-option" data-value="P">P Priority</div>
-                <div class="modal-option" data-value="C">C Cancelled</div>
-                <div class="modal-option" data-value="">Clear</div>
-                <div class="modal-option delete" data-value="DELETE">🗑️ Delete Appointment</div>
+                <button class="modal-btn notice" onclick="addAppointment('☺')">☺ Notice Given</button>
+                <button class="modal-btn priority" onclick="addAppointment('P')">P Priority</button>
+                <button class="modal-btn cancel" onclick="addAppointment('C')">C Cancelled</button>
+                <button class="modal-btn delete" onclick="addAppointment(null)">✕ Delete</button>
+                <button class="modal-btn close" onclick="closeModal()">Close</button>
             </div>
         </div>
     </div>
-    
+
     <script>
-        const techs = ['Tech 1', 'Tech 2', 'Tech 3', 'Tech 4'];
-        const days = [
-            { id: 'td1', label: 'TD1', date: '2/10', goal: 13 },
-            { id: 'td2', label: 'TD2', date: '2/11', goal: 9 },
-            { id: 'td3', label: 'TD3', date: '2/12', goal: 5 }
+        // Data
+        let techs = ['Tech 1', 'Tech 2', 'Tech 3', 'Tech 4'];
+        let days = [
+            { id: 'td1', label: 'TD1', date: '2/10', goal: 13, notes: '' },
+            { id: 'td2', label: 'TD2', date: '2/11', goal: 9, notes: '' },
+            { id: 'td3', label: 'TD3', date: '2/12', goal: 5, notes: '' }
         ];
         
-        // Google Drive API Functions
-        
-        function gapiLoaded() {
-            gapi.load('client', initializeGapiClient);
-        }
-        
-        async function initializeGapiClient() {
-            await gapi.client.init({
-                discoveryDocs: DISCOVERY_DOCS,
+        let data = {};
+        techs.forEach(tech => {
+            data[tech] = {};
+            days.forEach(day => {
+                data[tech][day.id] = ['☺', '☺', '☺'];
             });
-            gapiInited = true;
-            maybeEnableButtons();
+        });
+        
+        let customRows = [];
+        let currentTech = null;
+        let currentDay = null;
+        let currentIndex = null;
+        
+        // Google Drive API
+        function gapiLoaded() {
+            gapi.load('client', async () => {
+                await gapi.client.init({ discoveryDocs: DISCOVERY_DOCS });
+                gapiInited = true;
+                maybeEnableButtons();
+            });
         }
         
         function gisLoaded() {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: SCOPES,
-                callback: '',
+                callback: (resp) => {
+                    if (resp.error) {
+                        showStatus('Auth failed', 'error');
+                        return;
+                    }
+                    accessToken = gapi.client.getToken().access_token;
+                    document.getElementById('signoutButton').style.display = 'inline-block';
+                    document.getElementById('authorizeButton').style.display = 'none';
+                    document.getElementById('saveButton').style.display = 'inline-block';
+                    document.getElementById('loadButton').style.display = 'inline-block';
+                    showStatus('✓ Signed in', 'success');
+                }
             });
             gisInited = true;
             maybeEnableButtons();
@@ -1017,44 +757,21 @@
         
         function maybeEnableButtons() {
             if (gapiInited && gisInited) {
-                showStatus('✓ Ready to sign in', 'success');
-            } else {
-                setTimeout(() => {
-                    if (!gapiInited || !gisInited) {
-                        showStatus('⚠️ Google APIs loading...', '');
-                    }
-                }, 3000);
+                showStatus('Ready to sign in', 'success');
             }
         }
         
         function handleAuthClick() {
-            tokenClient.callback = async (resp) => {
-                if (resp.error !== undefined) {
-                    showStatus('Authentication failed', 'error');
-                    throw (resp);
-                }
-                accessToken = gapi.client.getToken().access_token;
-                document.getElementById('signoutButton').style.display = 'inline-flex';
-                document.getElementById('authorizeButton').style.display = 'none';
-                document.getElementById('saveButton').style.display = 'inline-flex';
-                document.getElementById('loadButton').style.display = 'inline-flex';
-                showStatus('✓ Signed in', 'success');
-            };
-            
-            if (gapi.client.getToken() === null) {
-                tokenClient.requestAccessToken({prompt: 'consent'});
-            } else {
-                tokenClient.requestAccessToken({prompt: ''});
-            }
+            tokenClient.requestAccessToken({ prompt: 'consent' });
         }
         
         function handleSignoutClick() {
             const token = gapi.client.getToken();
-            if (token !== null) {
+            if (token) {
                 google.accounts.oauth2.revoke(token.access_token);
                 gapi.client.setToken('');
                 accessToken = null;
-                document.getElementById('authorizeButton').style.display = 'inline-flex';
+                document.getElementById('authorizeButton').style.display = 'inline-block';
                 document.getElementById('signoutButton').style.display = 'none';
                 document.getElementById('saveButton').style.display = 'none';
                 document.getElementById('loadButton').style.display = 'none';
@@ -1081,16 +798,78 @@
             showStatus('Saving...', '');
             
             try {
-                const boardData = {
-                    version: '1.0',
-                    savedAt: new Date().toISOString(),
-                    techs: techs,
-                    days: days,
-                    data: data,
-                    customRows: customRows
+                const summary = {
+                    "CALL BOARD BACKUP": {
+                        "Saved": new Date().toLocaleString(),
+                        "Week": days.map(d => `${d.label} ${d.date}`).join(', ')
+                    },
+                    "GOALS": {},
+                    "APPOINTMENTS": {},
+                    "SUMMARY": {}
                 };
                 
-                const fileContent = JSON.stringify(boardData, null, 2);
+                days.forEach(day => {
+                    summary.GOALS[`${day.label} ${day.date}`] = day.goal;
+                    if (day.notes && day.notes.trim()) {
+                        if (!summary.NOTES) summary.NOTES = {};
+                        summary.NOTES[`${day.label} ${day.date}`] = day.notes;
+                    }
+                });
+                
+                let grandTotal = 0;
+                techs.forEach(tech => {
+                    summary.APPOINTMENTS[tech] = {};
+                    let techTotal = 0;
+                    
+                    days.forEach(day => {
+                        const appts = data[tech][day.id] || [];
+                        const active = appts.filter(a => a && a !== 'C');
+                        const cancelled = appts.filter(a => a === 'C').length;
+                        const noticeGiven = active.filter(a => a === '☺').length;
+                        const priority = active.filter(a => a === 'P').length;
+                        
+                        summary.APPOINTMENTS[tech][`${day.label} ${day.date}`] = {
+                            "Notice Given": noticeGiven,
+                            "Priority": priority,
+                            "Cancelled": cancelled,
+                            "Total Active": active.length
+                        };
+                        techTotal += active.length;
+                    });
+                    
+                    summary.APPOINTMENTS[tech]["TECH TOTAL"] = techTotal;
+                    grandTotal += techTotal;
+                });
+                
+                days.forEach(day => {
+                    let dayTotal = 0;
+                    techs.forEach(tech => {
+                        const appts = data[tech][day.id] || [];
+                        dayTotal += appts.filter(a => a && a !== 'C').length;
+                    });
+                    summary.SUMMARY[`${day.label} ${day.date}`] = {
+                        "Actual": dayTotal,
+                        "Goal": day.goal,
+                        "Status": dayTotal >= day.goal ? "✓ MET" : `${Math.round((dayTotal/day.goal)*100)}%`
+                    };
+                });
+                
+                summary.SUMMARY["GRAND TOTAL"] = grandTotal;
+                summary.SUMMARY["TOTAL GOAL"] = days.reduce((sum, day) => sum + day.goal, 0);
+                
+                const saveData = {
+                    "READABLE_SUMMARY": summary,
+                    "RAW_DATA": {
+                        version: '1.0',
+                        savedAt: new Date().toISOString(),
+                        techs: techs,
+                        days: days,
+                        data: data,
+                        customRows: customRows
+                    }
+                };
+                
+                const fileContent = JSON.stringify(saveData, null, 2);
                 const existingFile = await findFile(CALL_BOARD_FILENAME);
                 
                 if (existingFile) {
@@ -1115,14 +894,14 @@
             
             try {
                 const file = await findFile(CALL_BOARD_FILENAME);
-                
                 if (!file) {
                     showStatus('No data found', 'error');
                     return;
                 }
                 
                 const content = await downloadFile(file.id);
-                const boardData = JSON.parse(content);
+                const saveData = JSON.parse(content);
+                const boardData = saveData.RAW_DATA || saveData;
                 
                 if (boardData.techs) {
                     techs.length = 0;
@@ -1199,239 +978,84 @@
             return JSON.stringify(response.result);
         }
         
-        function checkAutoLoad() {
-            const token = gapi.client.getToken();
-            if (token !== null) {
-                accessToken = token.access_token;
-                document.getElementById('signoutButton').style.display = 'inline-flex';
-                document.getElementById('authorizeButton').style.display = 'none';
-                document.getElementById('saveButton').style.display = 'inline-flex';
-                document.getElementById('loadButton').style.display = 'inline-flex';
-                setTimeout(() => loadFromDrive(), 1000);
+        // Date functions
+        function applyStartDate() {
+            const startDateInput = document.getElementById('startDatePicker');
+            const dateValue = startDateInput.value;
+            
+            if (!dateValue) {
+                alert('Please select a valid start date');
+                return;
+            }
+            
+            const [year, month, day] = dateValue.split('-').map(Number);
+            
+            days.forEach((dayObj, index) => {
+                const currentDate = new Date(year, month - 1, day + index);
+                const monthNum = currentDate.getMonth() + 1;
+                const dayNum = currentDate.getDate();
+                dayObj.date = `${monthNum}/${dayNum}`;
+            });
+            
+            updateDatePreview();
+            renderBoard();
+        }
+        
+        function updateDatePreview() {
+            const preview = document.getElementById('datePreview');
+            if (days.length > 0 && days[0].date) {
+                const dateList = days.map(d => `${d.label}: ${d.date}`).join(' | ');
+                preview.textContent = dateList;
             }
         }
         
-        
-        // Initialize data
-        const data = {};
-        techs.forEach(tech => {
-            data[tech] = {};
-            days.forEach(day => {
-                data[tech][day.id] = ['☺', '☺', '☺'];
-            });
-        });
-        
-        const customRows = [];
-        let currentCell = null;
-        
-        function renderBoard() {
-            const container = document.getElementById('techRows');
-            container.innerHTML = '';
-            
-            // Update goals bar
-            renderGoalsBar();
-            
-            // Update header
-            renderHeader();
-            
-            // Render tech rows
-            techs.forEach((tech, techIndex) => {
-                const row = document.createElement('div');
-                row.className = 'grid-row';
-                row.style.gridTemplateColumns = `150px repeat(${days.length}, 1fr) 150px`;
-                
-                const techNameCell = document.createElement('div');
-                techNameCell.className = 'tech-name';
-                techNameCell.textContent = tech;
-                row.appendChild(techNameCell);
-                
-                days.forEach(day => {
-                    const cell = document.createElement('div');
-                    cell.className = 'appointment-cell';
-                    
-                    const appointments = data[tech][day.id] || [];
-                    appointments.forEach((appt, index) => {
-                        const marker = document.createElement('div');
-                        marker.className = 'appt-marker';
-                        
-                        if (appt === '☺') {
-                            marker.className += ' filled';
-                            marker.textContent = appt;
-                        } else if (appt === 'P') {
-                            marker.className += ' priority';
-                            marker.textContent = appt;
-                        } else if (appt === 'C') {
-                            marker.className += ' cancelled';
-                            marker.textContent = appt;
-                        } else {
-                            marker.className += ' empty';
-                        }
-                        
-                        marker.onclick = () => window.openModal(tech, day.id, index);
-                        cell.appendChild(marker);
-                    });
-                    
-                    // Add button
-                    const addBtn = document.createElement('div');
-                    addBtn.className = 'appt-marker empty';
-                    addBtn.textContent = '+';
-                    addBtn.onclick = () => window.addAppointment(tech, day.id);
-                    cell.appendChild(addBtn);
-                    
-                    row.appendChild(cell);
-                });
-                
-                const total = document.createElement('div');
-                total.className = 'total-cell';
-                
-                const totalNum = document.createElement('div');
-                totalNum.className = 'total-number';
-                totalNum.textContent = calculateTechTotal(tech);
-                total.appendChild(totalNum);
-                
-                // Calculate and show open slots
-                let openSlots = 0;
-                days.forEach(day => {
-                    const dayAppts = data[tech][day.id] || [];
-                    const emptyCount = dayAppts.filter(a => !a).length;
-                    openSlots += emptyCount;
-                });
-                
-                if (openSlots > 0) {
-                    const availInfo = document.createElement('div');
-                    availInfo.className = 'availability-info';
-                    availInfo.textContent = `${openSlots} open slot${openSlots !== 1 ? 's' : ''}`;
-                    total.appendChild(availInfo);
-                }
-                
-                row.appendChild(total);
-                
-                container.appendChild(row);
-            });
-            
-            // Render cancellation factor row
-            const cancelRow = document.createElement('div');
-            cancelRow.className = 'grid-row cancellation-row';
-            cancelRow.style.gridTemplateColumns = `150px repeat(${days.length}, 1fr) 150px`;
-            
-            const cancelLabel = document.createElement('div');
-            cancelLabel.className = 'tech-name';
-            cancelLabel.textContent = 'Cancellation Factor';
-            cancelRow.appendChild(cancelLabel);
-            
-            days.forEach(day => {
-                const cell = document.createElement('div');
-                cell.className = 'cancel-factor-cell';
-                
-                // Auto-calculate: count cancelled appointments / total appointments
-                let totalAppts = 0;
-                let cancelledAppts = 0;
-                
-                techs.forEach(tech => {
-                    const dayAppts = data[tech][day.id] || [];
-                    totalAppts += dayAppts.length;
-                    cancelledAppts += dayAppts.filter(a => a === 'C').length;
-                });
-                
-                // Calculate percentage
-                const cancelRate = totalAppts > 0 ? ((cancelledAppts / totalAppts) * 100).toFixed(1) : '0.0';
-                
-                const display = document.createElement('div');
-                display.className = 'cancel-factor-display';
-                display.textContent = `${cancelledAppts}/${totalAppts} (${cancelRate}%)`;
-                
-                cell.appendChild(display);
-                cancelRow.appendChild(cell);
-            });
-            
-            // Calculate overall cancellation rate
-            let totalAllAppts = 0;
-            let totalAllCancelled = 0;
-            
-            techs.forEach(tech => {
-                days.forEach(day => {
-                    const dayAppts = data[tech][day.id] || [];
-                    totalAllAppts += dayAppts.length;
-                    totalAllCancelled += dayAppts.filter(a => a === 'C').length;
-                });
-            });
-            
-            const overallRate = totalAllAppts > 0 ? ((totalAllCancelled / totalAllAppts) * 100).toFixed(1) : '0.0';
-            
-            const cancelTotal = document.createElement('div');
-            cancelTotal.className = 'total-cell cancel-total';
-            cancelTotal.textContent = `${totalAllCancelled}/${totalAllAppts} (${overallRate}%)`;
-            cancelRow.appendChild(cancelTotal);
-            
-            container.appendChild(cancelRow);
-            
-            // Render custom rows
-            customRows.forEach((customRow, rowIndex) => {
-                const row = document.createElement('div');
-                row.className = 'grid-row custom-row';
-                row.style.gridTemplateColumns = `150px repeat(${days.length}, 1fr) 150px`;
-                
-                const nameCell = document.createElement('div');
-                nameCell.className = 'tech-name custom-row-name';
-                
-                const nameInput = document.createElement('input');
-                nameInput.type = 'text';
-                nameInput.className = 'custom-row-name-input';
-                nameInput.value = customRow.name;
-                nameInput.placeholder = 'Row name...';
-                nameInput.onchange = (e) => {
-                    customRows[rowIndex].name = e.target.value;
-                };
-                
-                const deleteBtn = document.createElement('span');
-                deleteBtn.className = 'delete-row-btn';
-                deleteBtn.textContent = '×';
-                deleteBtn.onclick = () => window.deleteCustomRow(rowIndex);
-                
-                nameCell.appendChild(nameInput);
-                nameCell.appendChild(deleteBtn);
-                row.appendChild(nameCell);
-                
-                days.forEach(day => {
-                    const cell = document.createElement('div');
-                    cell.className = 'custom-cell';
-                    
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.className = 'custom-cell-input';
-                    input.value = customRow[day.id] || '';
-                    input.placeholder = 'Value or formula';
-                    input.oninput = (e) => {
-                        customRows[rowIndex][day.id] = e.target.value;
-                        renderBoard();
-                    };
-                    
-                    cell.appendChild(input);
-                    row.appendChild(cell);
-                });
-                
-                const total = document.createElement('div');
-                total.className = 'total-cell';
-                total.textContent = calculateCustomRowTotal(customRow);
-                row.appendChild(total);
-                
-                container.appendChild(row);
-            });
-            
-            updateTotals();
+        function initializeDatePicker() {
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('startDatePicker').value = dateStr;
+            updateDatePreview();
         }
         
+        // Modal
+        function openModal(tech, day, index) {
+            currentTech = tech;
+            currentDay = day;
+            currentIndex = index;
+            
+            const dayLabel = days.find(d => d.id === day).label;
+            document.getElementById('modalTitle').textContent = `${tech} - ${dayLabel}`;
+            document.getElementById('modal').style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+            currentTech = null;
+            currentDay = null;
+            currentIndex = null;
+        }
+        
+        function addAppointment(type) {
+            if (currentTech && currentDay !== null && currentIndex !== null) {
+                if (type === null) {
+                    data[currentTech][currentDay][currentIndex] = null;
+                } else {
+                    data[currentTech][currentDay][currentIndex] = type;
+                }
+                renderBoard();
+                closeModal();
+            }
+        }
+        
+        // Rendering
         function renderGoalsBar() {
             const goalsBar = document.getElementById('goalsBar');
             goalsBar.innerHTML = '';
             goalsBar.style.gridTemplateColumns = `150px repeat(${days.length}, 1fr) 150px`;
             
-            // Empty first cell
             const emptyCell = document.createElement('div');
             emptyCell.className = 'goal-item empty';
             goalsBar.appendChild(emptyCell);
             
-            // Day goals
             days.forEach((day, index) => {
                 const goalItem = document.createElement('div');
                 goalItem.className = 'goal-item';
@@ -1445,7 +1069,6 @@
                 
                 const goalNum = document.createElement('span');
                 goalNum.className = 'goal-number';
-                goalNum.id = `goal${index}`;
                 goalNum.textContent = day.goal;
                 
                 const arrows = document.createElement('div');
@@ -1457,6 +1080,7 @@
                 upArrow.onclick = () => {
                     days[index].goal = Math.max(0, days[index].goal + 1);
                     renderGoalsBar();
+                    updateTotals();
                 };
                 
                 const downArrow = document.createElement('div');
@@ -1465,35 +1089,28 @@
                 downArrow.onclick = () => {
                     days[index].goal = Math.max(0, days[index].goal - 1);
                     renderGoalsBar();
+                    updateTotals();
                 };
                 
                 arrows.appendChild(upArrow);
                 arrows.appendChild(downArrow);
-                
                 goalValue.appendChild(goalNum);
                 goalValue.appendChild(arrows);
-                
                 goalItem.appendChild(label);
                 goalItem.appendChild(goalValue);
                 goalsBar.appendChild(goalItem);
             });
             
-            // Total goal
             const totalGoalItem = document.createElement('div');
             totalGoalItem.className = 'goal-item';
-            
             const totalLabel = document.createElement('div');
             totalLabel.className = 'goal-label';
             totalLabel.textContent = 'Total Goal';
-            
             const totalValue = document.createElement('div');
             totalValue.className = 'goal-value';
-            
             const totalNum = document.createElement('span');
             totalNum.className = 'goal-number';
-            totalNum.id = 'totalGoal';
             totalNum.textContent = days.reduce((sum, day) => sum + day.goal, 0);
-            
             totalValue.appendChild(totalNum);
             totalGoalItem.appendChild(totalLabel);
             totalGoalItem.appendChild(totalValue);
@@ -1509,7 +1126,7 @@
             techLabel.textContent = 'Technician';
             header.appendChild(techLabel);
             
-            days.forEach((day, index) => {
+            days.forEach(day => {
                 const dayCell = document.createElement('div');
                 dayCell.textContent = `${day.label} ${day.date}`;
                 header.appendChild(dayCell);
@@ -1518,6 +1135,74 @@
             const totalLabel = document.createElement('div');
             totalLabel.textContent = 'Total';
             header.appendChild(totalLabel);
+        }
+        
+        function renderTechRows() {
+            const techRows = document.getElementById('techRows');
+            techRows.innerHTML = '';
+            
+            techs.forEach(tech => {
+                const row = document.createElement('div');
+                row.className = 'grid-row';
+                row.style.gridTemplateColumns = `150px repeat(${days.length}, 1fr) 150px`;
+                
+                const techNameCell = document.createElement('div');
+                techNameCell.className = 'tech-name';
+                techNameCell.textContent = tech;
+                row.appendChild(techNameCell);
+                
+                days.forEach(day => {
+                    const dayCell = document.createElement('div');
+                    dayCell.className = 'day-cell';
+                    
+                    const appointments = data[tech][day.id] || [];
+                    appointments.forEach((appt, index) => {
+                        const marker = document.createElement('div');
+                        marker.className = 'appt-marker';
+                        
+                        if (appt === '☺') {
+                            marker.classList.add('filled');
+                            marker.textContent = '☺';
+                        } else if (appt === 'P') {
+                            marker.classList.add('priority');
+                            marker.textContent = 'P';
+                        } else if (appt === 'C') {
+                            marker.classList.add('cancelled');
+                            marker.textContent = 'C';
+                        }
+                        
+                        marker.onclick = () => openModal(tech, day.id, index);
+                        dayCell.appendChild(marker);
+                    });
+                    
+                    row.appendChild(dayCell);
+                });
+                
+                const total = document.createElement('div');
+                total.className = 'total-cell';
+                
+                const totalNum = document.createElement('div');
+                totalNum.className = 'total-number';
+                totalNum.textContent = calculateTechTotal(tech);
+                total.appendChild(totalNum);
+                
+                let openSlots = 0;
+                days.forEach(day => {
+                    const dayAppts = data[tech][day.id] || [];
+                    const emptyCount = dayAppts.filter(a => !a).length;
+                    openSlots += emptyCount;
+                });
+                
+                if (openSlots > 0) {
+                    const availInfo = document.createElement('div');
+                    availInfo.className = 'availability-info';
+                    availInfo.textContent = `${openSlots} open slot${openSlots !== 1 ? 's' : ''}`;
+                    total.appendChild(availInfo);
+                }
+                
+                row.appendChild(total);
+                techRows.appendChild(row);
+            });
         }
         
         function renderDailyTotals() {
@@ -1530,7 +1215,7 @@
             label.textContent = 'Daily Totals';
             totalsRow.appendChild(label);
             
-            days.forEach((day, index) => {
+            days.forEach(day => {
                 const cell = document.createElement('div');
                 cell.className = 'total-cell';
                 cell.id = `total-${day.id}`;
@@ -1540,7 +1225,6 @@
                 totalNum.textContent = '0';
                 cell.appendChild(totalNum);
                 
-                // Add goal progress indicator
                 const progress = document.createElement('div');
                 progress.className = 'goal-progress';
                 progress.id = `progress-${day.id}`;
@@ -1568,104 +1252,131 @@
             totalsRow.appendChild(grandTotal);
         }
         
+        function renderCancellationRow() {
+            const cancelRow = document.getElementById('cancellationRow');
+            cancelRow.innerHTML = '';
+            cancelRow.style.gridTemplateColumns = `150px repeat(${days.length}, 1fr) 150px`;
+            
+            const label = document.createElement('div');
+            label.className = 'tech-name';
+            label.textContent = 'Cancellation Factor';
+            cancelRow.appendChild(label);
+            
+            let totalCancelled = 0;
+            let totalAll = 0;
+            
+            days.forEach(day => {
+                let dayCancelled = 0;
+                let dayTotal = 0;
+                
+                techs.forEach(tech => {
+                    const appts = data[tech][day.id] || [];
+                    dayCancelled += appts.filter(a => a === 'C').length;
+                    dayTotal += appts.filter(a => a).length;
+                });
+                
+                totalCancelled += dayCancelled;
+                totalAll += dayTotal;
+                
+                const cell = document.createElement('div');
+                cell.className = 'cancel-cell';
+                
+                const percentage = dayTotal > 0 ? ((dayCancelled / dayTotal) * 100).toFixed(1) : '0.0';
+                cell.textContent = `${dayCancelled}/${dayTotal} (${percentage}%)`;
+                cancelRow.appendChild(cell);
+            });
+            
+            const totalCell = document.createElement('div');
+            totalCell.className = 'cancel-cell';
+            const totalPercentage = totalAll > 0 ? ((totalCancelled / totalAll) * 100).toFixed(1) : '0.0';
+            totalCell.textContent = `${totalCancelled}/${totalAll} (${totalPercentage}%)`;
+            cancelRow.appendChild(totalCell);
+        }
+        
+        function renderNotes() {
+            const notesGrid = document.getElementById('notesGrid');
+            notesGrid.innerHTML = '';
+            
+            const placeholders = [
+                "Example: Customer callbacks, special instructions, part delays, gate codes...\n• Mrs. Johnson needs follow-up in 2 weeks\n• Oak St property - gate code 1234\n• Heavy traffic on Route 9 - add 15min buffer",
+                "Example: Rescheduling needs, tech availability, priority jobs...\n• Call Mr. Wilson to reschedule Thursday slot\n• Tech 3 has training 2-4pm, reassign calls\n• Emergency job for Smith - moved to priority",
+                "Example: Parts orders, callbacks, weather alerts, team notes...\n• Parts delayed for Anderson job - reschedule Friday\n• Rain expected afternoon - waterproof equipment\n• Team meeting 3pm - schedule around it"
+            ];
+            
+            days.forEach((day, index) => {
+                const noteItem = document.createElement('div');
+                noteItem.className = 'note-item';
+                
+                const noteLabel = document.createElement('div');
+                noteLabel.className = 'note-label';
+                noteLabel.textContent = `${day.label} ${day.date}`;
+                
+                const noteInput = document.createElement('textarea');
+                noteInput.className = 'note-input';
+                noteInput.placeholder = placeholders[index] || placeholders[0];
+                noteInput.value = day.notes || '';
+                noteInput.oninput = (e) => {
+                    days[index].notes = e.target.value;
+                };
+                
+                noteItem.appendChild(noteLabel);
+                noteItem.appendChild(noteInput);
+                notesGrid.appendChild(noteItem);
+            });
+        }
+        
         function calculateTechTotal(tech) {
             let total = 0;
             days.forEach(day => {
-                // Only count active appointments (☺ and P), not cancelled (C)
-                const dayAppts = data[tech][day.id] || [];
-                total += dayAppts.filter(a => a && a !== 'C').length;
+                const appts = data[tech][day.id] || [];
+                total += appts.filter(a => a && a !== 'C').length;
             });
             return total;
         }
         
-        function calculateCustomRowTotal(customRow) {
-            let total = 0;
-            days.forEach(day => {
-                const value = customRow[day.id] || '';
-                if (value && value.startsWith('=')) {
-                    try {
-                        const formula = value.substring(1);
-                        total += evaluateFormula(formula);
-                    } catch (e) {
-                        // Invalid formula
-                    }
-                } else {
-                    total += parseFloat(value) || 0;
-                }
-            });
-            return total.toFixed(1);
-        }
-        
-        function evaluateFormula(formula) {
-            formula = formula.toUpperCase();
-            
-            // Replace day IDs with actual values
-            days.forEach(day => {
-                const dayTotal = document.getElementById(`total-${day.id}`)?.textContent || '0';
-                formula = formula.replace(new RegExp(day.label, 'g'), dayTotal);
-            });
-            
-            // Simple math eval (sanitized)
-            const sanitized = formula.replace(/[^0-9+\-*/.() ]/g, '');
-            if (sanitized) {
-                return eval(sanitized);
-            }
-            return 0;
-        }
-        
         function updateTotals() {
-            console.log('UPDATE TOTALS CALLED');
-            
             renderDailyTotals();
             
             let overallGoal = 0;
             
-            days.forEach((day, index) => {
+            days.forEach(day => {
                 let dayTotal = 0;
                 techs.forEach(tech => {
-                    // Only count active appointments (☺ and P), not cancelled (C)
                     const dayAppts = data[tech][day.id] || [];
                     const count = dayAppts.filter(a => a && a !== 'C').length;
                     dayTotal += count;
                 });
                 
-                console.log(`${day.id} total: ${dayTotal}`);
-                
-                // Update total number
                 const totalElem = document.getElementById(`total-${day.id}`);
                 if (totalElem) {
                     const numElem = totalElem.querySelector('.total-number');
                     if (numElem) numElem.textContent = dayTotal;
                 }
                 
-                // Update progress indicator with color coding
                 const progressElem = document.getElementById(`progress-${day.id}`);
                 if (progressElem) {
                     const goal = day.goal;
                     const percentage = goal > 0 ? (dayTotal / goal) * 100 : 0;
                     
                     progressElem.textContent = `${dayTotal}/${goal}`;
-                    
-                    // Color code based on performance
                     progressElem.classList.remove('met', 'close', 'behind');
+                    
                     if (dayTotal >= goal) {
-                        progressElem.classList.add('met'); // Green - goal met
+                        progressElem.classList.add('met');
                     } else if (percentage >= 75) {
-                        progressElem.classList.add('close'); // Yellow - close to goal
+                        progressElem.classList.add('close');
                     } else {
-                        progressElem.classList.add('behind'); // Red - behind goal
+                        progressElem.classList.add('behind');
                     }
                 }
                 
                 overallGoal += day.goal;
             });
             
-            // Grand total
             let grandTotal = 0;
             techs.forEach(tech => {
                 grandTotal += calculateTechTotal(tech);
             });
-            console.log('Grand total:', grandTotal);
             
             const grandTotalElem = document.getElementById('grand-total');
             if (grandTotalElem) {
@@ -1689,188 +1400,78 @@
             }
         }
         
-        window.openModal = function(tech, day, index) {
-            currentCell = { tech, day, index };
-            document.getElementById('modal').classList.add('active');
-        };
-        
-        window.addAppointment = function(tech, day) {
-            data[tech][day].push('');
-            renderBoard();
-        };
-        
-        window.addTech = function() {
-            console.log('addTech called');
-            const techNum = techs.length + 1;
-            const techName = `Tech ${techNum}`;
-            techs.push(techName);
-            
-            // Initialize data for new tech
-            data[techName] = {};
-            days.forEach(day => {
-                data[techName][day.id] = [];
-            });
-            
-            renderBoard();
-        };
-        
-        window.removeTech = function() {
-            console.log('removeTech called, current techs:', techs.length);
-            if (techs.length <= 1) {
-                alert('Cannot remove the last technician!');
-                return;
-            }
-            
-            const techToRemove = techs[techs.length - 1];
-            console.log('Attempting to remove:', techToRemove);
-            if (confirm(`Remove ${techToRemove}?`)) {
-                delete data[techToRemove];
-                techs.pop();
-                console.log('Tech removed, remaining:', techs);
-                renderBoard();
-            }
-        };
-        
-        window.addDay = function() {
-            console.log('addDay called');
-            const dayNum = days.length + 1;
-            const newDay = {
-                id: `td${dayNum}`,
-                label: `TD${dayNum}`,
-                date: '',
-                goal: 0
-            };
-            days.push(newDay);
-            
-            // Initialize data for new day
-            techs.forEach(tech => {
-                data[tech][newDay.id] = [];
-            });
-            
-            console.log('Day added:', newDay);
-            renderBoard();
-        };
-        
-        window.removeDay = function() {
-            console.log('removeDay called, current days:', days.length);
-            if (days.length <= 1) {
-                alert('Cannot remove the last day!');
-                return;
-            }
-            
-            const dayToRemove = days[days.length - 1];
-            console.log('Attempting to remove:', dayToRemove);
-            if (confirm(`Remove ${dayToRemove.label}?`)) {
-                techs.forEach(tech => {
-                    delete data[tech][dayToRemove.id];
-                });
-                days.pop();
-                console.log('Day removed, remaining:', days);
-                renderBoard();
-            }
-        };
-        
-        window.addCustomRow = function() {
-            const newRow = { name: 'Custom Row' };
-            days.forEach(day => {
-                newRow[day.id] = '';
-            });
-            customRows.push(newRow);
-            renderBoard();
+        function renderBoard() {
+            renderGoalsBar();
+            renderHeader();
+            renderTechRows();
+            renderDailyTotals();
+            renderCancellationRow();
+            renderNotes();
+            updateTotals();
         }
         
-        window.deleteCustomRow = function(index) {
-            customRows.splice(index, 1);
-            renderBoard();
-        };
-        
-        function adjustGoal(goalId, change) {
-            const goalElem = document.getElementById(goalId);
-            let currentValue = parseInt(goalElem.textContent) || 0;
-            currentValue = Math.max(0, currentValue + change);
-            goalElem.textContent = currentValue;
-            updateTotalGoal();
-        }
-        
-        // Modal event listeners
-        document.getElementById('modal').onclick = (e) => {
-            if (e.target.id === 'modal') {
-                document.getElementById('modal').classList.remove('active');
-            }
-        };
-        
-        document.querySelectorAll('.modal-option').forEach(option => {
-            option.onclick = () => {
-                const value = option.dataset.value;
-                if (currentCell) {
-                    if (value === 'DELETE') {
-                        data[currentCell.tech][currentCell.day].splice(currentCell.index, 1);
-                    } else {
-                        data[currentCell.tech][currentCell.day][currentCell.index] = value;
-                    }
-                    renderBoard();
-                }
-                document.getElementById('modal').classList.remove('active');
-            };
-        });
-        
-        window.applyStartDate = function() {
-            const startDateInput = document.getElementById('startDatePicker');
-            const dateValue = startDateInput.value;
-            
-            if (!dateValue) {
-                alert('Please select a valid start date');
-                return;
-            }
-            
-            // Parse date as local date to avoid timezone issues
-            const [year, month, day] = dateValue.split('-').map(Number);
-            const startDate = new Date(year, month - 1, day);
-            
-            // Auto-fill dates for each day
-            days.forEach((dayObj, index) => {
-                const currentDate = new Date(year, month - 1, day + index);
-                
-                // Format as M/D
-                const monthNum = currentDate.getMonth() + 1;
-                const dayNum = currentDate.getDate();
-                dayObj.date = `${monthNum}/${dayNum}`;
-            });
-            
-            updateDatePreview();
-            renderBoard();
-        };
-        
-        function updateDatePreview() {
-            const preview = document.getElementById('datePreview');
-            if (days.length > 0 && days[0].date) {
-                const dateList = days.map(d => `${d.label}: ${d.date}`).join(' | ');
-                preview.textContent = dateList;
-            } else {
-                preview.textContent = 'Select a start date to auto-fill all dates';
-            }
-        }
-        
-        // Set default date to today
-        function initializeDatePicker() {
-            const today = new Date();
-            const dateStr = today.toISOString().split('T')[0];
-            document.getElementById('startDatePicker').value = dateStr;
-            updateDatePreview();
-        }
-        
+        // Initialize
         window.addEventListener('load', () => {
             gapiLoaded();
             gisLoaded();
-            setTimeout(checkAutoLoad, 2000);
+            loadFromLocal();
         });
         
-        // Initialize
-        console.log('Initializing board...');
-        console.log('Initial data:', data);
+        // Auto-save to browser localStorage
+        function saveToLocal() {
+            const boardData = {
+                version: '1.0',
+                savedAt: new Date().toISOString(),
+                techs: techs,
+                days: days,
+                data: data,
+                customRows: customRows
+            };
+            localStorage.setItem('callBoardData', JSON.stringify(boardData));
+        }
+        
+        function loadFromLocal() {
+            const saved = localStorage.getItem('callBoardData');
+            if (!saved) return;
+            
+            try {
+                const boardData = JSON.parse(saved);
+                
+                if (boardData.techs) {
+                    techs.length = 0;
+                    techs.push(...boardData.techs);
+                }
+                if (boardData.days) {
+                    days.length = 0;
+                    days.push(...boardData.days);
+                }
+                if (boardData.data) {
+                    Object.keys(data).forEach(key => delete data[key]);
+                    Object.assign(data, boardData.data);
+                }
+                if (boardData.customRows) {
+                    customRows.length = 0;
+                    customRows.push(...boardData.customRows);
+                }
+                
+                renderBoard();
+            } catch (error) {
+                console.error('Load from local storage failed:', error);
+            }
+        }
+        
+        // Auto-save every 10 seconds
+        setInterval(() => {
+            saveToLocal();
+        }, 10000);
+        
+        // Save on page unload
+        window.addEventListener('beforeunload', () => {
+            saveToLocal();
+        });
+        
         initializeDatePicker();
         renderBoard();
-        console.log('Board initialized with', techs.length, 'technicians and', days.length, 'days');
     </script>
 </body>
 </html>
