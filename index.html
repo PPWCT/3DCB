@@ -10,10 +10,10 @@
     <script>
         // Google Drive API Configuration
         const CLIENT_ID = '31947493557-aqbcb8n3fag89rcjnchj5p6gufuh1oda.apps.googleusercontent.com';
-        const API_KEY = 'YOUR_API_KEY'; // Optional - not needed for OAuth
-        const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
         const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
         const CALL_BOARD_FILENAME = '3day-call-board-data.json';
+        const DRIVE_FOLDER_ID = '1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU'; // Your specific folder
         
         let gapiInited = false;
         let gisInited = false;
@@ -934,6 +934,11 @@
             </button>
         </div>
         <div class="sync-status" id="syncStatus">Initializing Google Drive...</div>
+        <div style="text-align: center; margin-top: 5px;">
+            <a href="https://drive.google.com/drive/folders/1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU" target="_blank" style="font-size: 11px; color: #7B9EB3; text-decoration: none;">
+                📁 View Drive Folder
+            </a>
+        </div>
         
         <div class="board">
             <div class="board-scroll-wrapper">
@@ -1146,9 +1151,9 @@
         
         async function findFile(filename) {
             const response = await gapi.client.drive.files.list({
-                q: `name='${filename}' and trashed=false`,
+                q: `name='${filename}' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`,
                 fields: 'files(id, name)',
-                spaces: 'appDataFolder'
+                spaces: 'drive'
             });
             return response.result.files && response.result.files.length > 0 ? response.result.files[0] : null;
         }
@@ -1157,7 +1162,7 @@
             const metadata = {
                 name: filename,
                 mimeType: 'application/json',
-                parents: ['appDataFolder']
+                parents: [DRIVE_FOLDER_ID]
             };
             
             const form = new FormData();
