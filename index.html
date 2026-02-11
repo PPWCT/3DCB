@@ -21,6 +21,51 @@
         let gisInited = false;
         let tokenClient;
         let accessToken = null;
+        
+        // Persistent login: Check for saved token on load
+        function checkSavedToken() {
+            const savedToken = localStorage.getItem('googleAccessToken');
+            const tokenExpiry = localStorage.getItem('googleTokenExpiry');
+            
+            if (savedToken && tokenExpiry) {
+                const now = new Date().getTime();
+                if (now < parseInt(tokenExpiry)) {
+                    // Token is still valid
+                    accessToken = savedToken;
+                    gapi.client.setToken({ access_token: savedToken });
+                    
+                    // Update UI to show signed in state
+                    document.getElementById('signoutButton').style.display = 'inline-block';
+                    document.getElementById('authorizeButton').style.display = 'none';
+                    document.getElementById('authStatus').style.display = 'inline-block';
+                    document.getElementById('saveButton').disabled = false;
+                    document.getElementById('loadButton').disabled = false;
+                    showStatus('✓ Auto-signed in', 'success');
+                    
+                    // Start auto-save
+                    startDriveAutoSave();
+                    return true;
+                } else {
+                    // Token expired, clear it
+                    localStorage.removeItem('googleAccessToken');
+                    localStorage.removeItem('googleTokenExpiry');
+                }
+            }
+            return false;
+        }
+        
+        // Save token to localStorage with 1 hour expiry
+        function saveToken(token) {
+            const expiryTime = new Date().getTime() + (60 * 60 * 1000); // 1 hour from now
+            localStorage.setItem('googleAccessToken', token);
+            localStorage.setItem('googleTokenExpiry', expiryTime.toString());
+        }
+        
+        // Clear saved token
+        function clearSavedToken() {
+            localStorage.removeItem('googleAccessToken');
+            localStorage.removeItem('googleTokenExpiry');
+        }
     </script>
     <style>
         :root {
@@ -937,6 +982,9 @@
                     accessToken = resp.access_token;
                     gapi.client.setToken({ access_token: resp.access_token });
                     
+                    // Save token for persistent login
+                    saveToken(resp.access_token);
+                    
                     // Priority 1: Update UI state reliably
                     document.getElementById('signoutButton').style.display = 'inline-block';
                     document.getElementById('authorizeButton').style.display = 'none';
@@ -955,7 +1003,11 @@
         
         function maybeEnableButtons() {
             if (gapiInited && gisInited) {
-                showStatus('Ready to sign in', 'success');
+                // Check for saved token and auto-sign in
+                const autoSignedIn = checkSavedToken();
+                if (!autoSignedIn) {
+                    showStatus('Ready to sign in', 'success');
+                }
             }
         }
         
@@ -969,6 +1021,9 @@
                 google.accounts.oauth2.revoke(token.access_token);
                 gapi.client.setToken('');
                 accessToken = null;
+                
+                // Clear saved token from localStorage
+                clearSavedToken();
                 
                 // Stop auto-save interval
                 stopDriveAutoSave();
