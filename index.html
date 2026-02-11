@@ -45,10 +45,11 @@
         body {
             font-family: 'Work Sans', sans-serif;
             background: #13151C;
-            padding: 12px;
+            padding: 0;
             min-height: 100vh;
             color: var(--text-color);
             position: relative;
+            margin: 0;
         }
         
         body::before {
@@ -78,7 +79,7 @@
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 100%;
             margin: 0 auto;
             position: relative;
             z-index: 1;
@@ -86,8 +87,10 @@
         
         .header {
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 0;
             position: relative;
+            padding: 12px 16px 8px 16px;
+            background: rgba(19, 21, 28, 0.8);
         }
         
         .auth-corner {
@@ -152,15 +155,16 @@
             background: rgba(37, 41, 54, 0.5);
             backdrop-filter: blur(10px);
             padding: 12px 16px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            margin-bottom: 12px;
+            border-radius: 0;
+            box-shadow: none;
+            margin-bottom: 0;
             display: flex;
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
             justify-content: center;
-            border: 1px solid rgba(96, 165, 250, 0.12);
+            border: none;
+            border-bottom: 1px solid rgba(96, 165, 250, 0.2);
         }
         
         .date-nav-btn {
@@ -277,10 +281,12 @@
         
         .sync-status {
             text-align: center;
-            font-size: 11px;
+            font-size: 10px;
             color: var(--soft-text);
-            margin-bottom: 8px;
+            margin: 0;
+            padding: 4px 0;
             min-height: 16px;
+            background: rgba(19, 21, 28, 0.5);
         }
         
         .sync-status.success { color: var(--success-green); }
@@ -289,10 +295,10 @@
         .board {
             background: rgba(37, 41, 54, 0.6);
             backdrop-filter: blur(10px);
-            border-radius: 16px;
+            border-radius: 0;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             overflow: hidden;
-            border: 1px solid rgba(96, 165, 250, 0.15);
+            border: none;
         }
         
         .board-scroll-wrapper {
@@ -774,9 +780,9 @@
             </button>
         </div>
         <div class="sync-status" id="syncStatus"></div>
-        <div style="text-align: center; margin-bottom: 10px;">
+        <div style="text-align: center; margin: 0; padding: 6px 0; background: rgba(19, 21, 28, 0.5); border-bottom: 1px solid rgba(96, 165, 250, 0.1);">
             <a href="https://drive.google.com/drive/folders/1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU" target="_blank" style="font-size: 10px; color: var(--tech-blue); text-decoration: none;">
-                📁 View Drive Folder
+                📁 Drive Folder
             </a>
         </div>
         
@@ -870,6 +876,7 @@
         let addJobTech = null; // For add job modal
         let addJobDay = null;
         let driveAutoSaveInterval = null; // Track auto-save interval
+        let driveAutoLoadInterval = null; // Track auto-load interval for multi-device sync
         
         // Priority 1: Fixed Google OAuth callbacks (eliminated race conditions via onload)
         function gapiLoaded() {
@@ -943,7 +950,8 @@
             const status = document.getElementById('syncStatus');
             status.textContent = message;
             status.className = 'sync-status ' + type;
-            if (message && type) {
+            // Keep success messages visible (don't auto-clear for sync status)
+            if (type === 'error') {
                 setTimeout(() => {
                     status.textContent = '';
                     status.className = 'sync-status';
@@ -952,10 +960,17 @@
         }
         
         // Auto-save to Drive functions
+        // LIVE MULTI-DEVICE SYNC: 
+        // - Saves to Drive every 30 seconds after sign-in
+        // - Loads from Drive every 35 seconds to get updates from other devices
+        // - Status shows "🔄 Synced HH:MM:SS" to confirm sync is active
         function startDriveAutoSave() {
-            // Clear any existing interval
+            // Clear any existing intervals
             if (driveAutoSaveInterval) {
                 clearInterval(driveAutoSaveInterval);
+            }
+            if (driveAutoLoadInterval) {
+                clearInterval(driveAutoLoadInterval);
             }
             
             // Save immediately on sign-in
@@ -965,12 +980,22 @@
             driveAutoSaveInterval = setInterval(() => {
                 saveToDrive(true);
             }, 30000);
+            
+            // Load from Drive every 35 seconds to get updates from other devices
+            // (Offset by 5 seconds to avoid conflicts with save)
+            driveAutoLoadInterval = setInterval(() => {
+                loadFromDrive(true); // Silent load
+            }, 35000);
         }
         
         function stopDriveAutoSave() {
             if (driveAutoSaveInterval) {
                 clearInterval(driveAutoSaveInterval);
                 driveAutoSaveInterval = null;
+            }
+            if (driveAutoLoadInterval) {
+                clearInterval(driveAutoLoadInterval);
+                driveAutoLoadInterval = null;
             }
         }
         
@@ -1072,9 +1097,9 @@
                 
                 // Show different messages for auto vs manual save
                 if (isAutoSave) {
-                    // Silent auto-save or brief indicator
-                    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    showStatus(`Auto-saved ${now}`, 'success');
+                    // Silent auto-save with timestamp
+                    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    showStatus(`🔄 Synced ${now}`, 'success');
                 } else {
                     showStatus('✓ Saved to Drive', 'success');
                 }
@@ -1087,13 +1112,17 @@
             }
         }
         
-        async function loadFromDrive() {
+        async function loadFromDrive(isSilent = false) {
             if (!accessToken) {
-                showStatus('Please sign in first', 'error');
+                if (!isSilent) {
+                    showStatus('Please sign in first', 'error');
+                }
                 return;
             }
             
-            showStatus('Loading...', '');
+            if (!isSilent) {
+                showStatus('Loading...', '');
+            }
             
             try {
                 const file = await findFile(CALL_BOARD_FILENAME);
@@ -1128,9 +1157,13 @@
                 }
                 
                 renderBoard();
-                showStatus('✓ Loaded from Drive', 'success');
+                if (!isSilent) {
+                    showStatus('✓ Loaded from Drive', 'success');
+                }
             } catch (error) {
-                showStatus('✗ Load failed: ' + (error.message || 'Unknown error'), 'error');
+                if (!isSilent) {
+                    showStatus('✗ Load failed: ' + (error.message || 'Unknown error'), 'error');
+                }
             }
         }
         
