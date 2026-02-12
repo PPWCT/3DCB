@@ -14,7 +14,7 @@
         const CLIENT_ID = '31947493557-aqbcb8n3fag89rcjnchj5p6gufuh1oda.apps.googleusercontent.com';
         const SCOPES = 'https://www.googleapis.com/auth/drive.file';
         const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
-        const CALL_BOARD_FILENAME = '3day-call-board-data.json';
+        const CALL_BOARD_FILENAME = '3day-call-board-data.txt';
         const DRIVE_FOLDER_ID = '1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU';
         
         let gapiInited = false;
@@ -1119,20 +1119,72 @@
                     };
                 });
 
-            const saveData = {
-                'Last Saved': new Date().toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                'Current View': days.map(d => d.label + ': ' + d.date).join('  |  '),
-                'Daily Breakdown': breakdown,
-                'RAW_DATA': {
-                    version: '1.2',
-                    savedAt: new Date().toISOString(),
-                    techs, days, data, customRows,
-                    dateStorage: cleanStorage
+            // Build clean human-readable text file
+            const lines = [];
+            const divider = '═'.repeat(52);
+            const thin    = '─'.repeat(52);
+
+            lines.push(divider);
+            lines.push('  3-DAY CALL BOARD');
+            lines.push('  Saved: ' + new Date().toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
+            lines.push('  View:  ' + days.map(d => d.label + ' ' + d.date).join('  |  '));
+            lines.push(divider);
+
+            // Sort dates chronologically
+            const sortedDates = Object.entries(cleanStorage)
+                .sort(([a], [b]) => new Date(a + ', 2026') - new Date(b + ', 2026'));
+
+            sortedDates.forEach(([dateKey, entry]) => {
+                let dayTotal = 0, dayCancelled = 0;
+                const techLines = [];
+
+                techs.forEach(tech => {
+                    const appts = entry.data[tech] || [];
+                    const notice    = appts.filter(a => a === '☺').length;
+                    const priority  = appts.filter(a => a === 'P').length;
+                    const cancelled = appts.filter(a => a === 'C').length;
+                    dayTotal    += notice + priority;
+                    dayCancelled += cancelled;
+                    if (appts.length > 0) {
+                        const parts = [];
+                        if (notice)    parts.push(notice    + ' Notice Given');
+                        if (priority)  parts.push(priority  + ' Priority');
+                        if (cancelled) parts.push(cancelled + ' Cancelled');
+                        techLines.push('    ' + tech.padEnd(10) + parts.join(', '));
+                    }
+                });
+
+                const pct    = entry.goal > 0 ? Math.round((dayTotal / entry.goal) * 100) : 0;
+                const status = dayTotal >= entry.goal ? '✓ GOAL MET' : pct + '% of goal';
+
+                lines.push('');
+                lines.push('  ' + dateKey);
+                lines.push(thin);
+                if (entry.notes) lines.push('  Notes: ' + entry.notes);
+                lines.push('  Goal:  ' + entry.goal + '  |  Total: ' + dayTotal + '  |  ' + status + (dayCancelled > 0 ? '  |  ' + dayCancelled + ' Cancelled' : ''));
+                if (techLines.length > 0) {
+                    lines.push('');
+                    techLines.forEach(l => lines.push(l));
                 }
-            };
+            });
+
+            lines.push('');
+            lines.push(divider);
+            lines.push('');
+
+            // Append raw JSON at the bottom so the app can reload it
+            lines.push('%%RAW_DATA_START%%');
+            lines.push(JSON.stringify({
+                version: '1.2',
+                savedAt: new Date().toISOString(),
+                techs, days, data, customRows,
+                dateStorage: cleanStorage
+            }));
+            lines.push('%%RAW_DATA_END%%');
 
             try {
-                const fileContent = JSON.stringify(saveData, null, 2);
+                const fileContent = lines.join('\n');
+                const mimeType = 'text/plain';
                 let existingFileId = null;
                 const listResp = await fetch(
                     'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent("name='" + CALL_BOARD_FILENAME + "' and '" + DRIVE_FOLDER_ID + "' in parents and trashed=false") + '&fields=files(id)&spaces=drive',
@@ -1145,12 +1197,12 @@
                 if (existingFileId) {
                     uploadResp = await fetch(
                         'https://www.googleapis.com/upload/drive/v3/files/' + existingFileId + '?uploadType=media',
-                        { method: 'PATCH', headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' }, body: fileContent }
+                        { method: 'PATCH', headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': mimeType }, body: fileContent }
                     );
                 } else {
                     const form = new FormData();
-                    form.append('metadata', new Blob([JSON.stringify({ name: CALL_BOARD_FILENAME, mimeType: 'application/json', parents: [DRIVE_FOLDER_ID] })], { type: 'application/json' }));
-                    form.append('file', new Blob([fileContent], { type: 'application/json' }));
+                    form.append('metadata', new Blob([JSON.stringify({ name: CALL_BOARD_FILENAME, mimeType, parents: [DRIVE_FOLDER_ID] })], { type: 'application/json' }));
+                    form.append('file', new Blob([fileContent], { type: mimeType }));
                     uploadResp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
                         { method: 'POST', headers: { Authorization: 'Bearer ' + accessToken }, body: form }
                     );
@@ -1194,18 +1246,29 @@
 
                 const fileId = listData.files[0].id;
 
-                // Download file content using fetch directly — avoids double-stringify bug
+                // Download file content using fetch directly
                 const downloadResp = await fetch(
                     `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
                     { headers: { Authorization: 'Bearer ' + accessToken } }
                 );
 
-                if (!downloadResp.ok) {
-                    throw new Error(`Download failed (${downloadResp.status})`);
-                }
+                if (!downloadResp.ok) throw new Error('Download failed (' + downloadResp.status + ')');
 
-                const saveData = await downloadResp.json();
-                const boardData = saveData.RAW_DATA || saveData;
+                const text = await downloadResp.text();
+
+                // Parse raw JSON block from bottom of text file
+                const rawStart = text.indexOf('%%RAW_DATA_START%%');
+                const rawEnd   = text.indexOf('%%RAW_DATA_END%%');
+                let boardData;
+                if (rawStart !== -1 && rawEnd !== -1) {
+                    // New TXT format — extract embedded JSON
+                    const rawJson = text.slice(rawStart + '%%RAW_DATA_START%%'.length, rawEnd).trim();
+                    boardData = JSON.parse(rawJson);
+                } else {
+                    // Legacy JSON format fallback
+                    const saveData = JSON.parse(text);
+                    boardData = saveData.RAW_DATA || saveData;
+                }
 
                 if (boardData.techs) { techs.length = 0; techs.push(...boardData.techs); }
                 if (boardData.days)  { days.length = 0;  days.push(...boardData.days);  }
