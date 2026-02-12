@@ -930,16 +930,20 @@
                 scope: SCOPES,
                 callback: (resp) => {
                     if (resp.error) {
-                        showStatus('Auth failed: ' + (resp.error_description || resp.error), 'error');
+                        if (resp.error === 'interaction_required' || resp.error === 'login_required' || resp.error === 'access_denied') {
+                            // Silent refresh needs a user click — show one-click resume
+                            showResumeButton();
+                        } else {
+                            localStorage.removeItem('callBoardSignedIn');
+                            showStatus('Auth error: ' + (resp.error_description || resp.error), 'error');
+                        }
                         return;
                     }
                     accessToken = resp.access_token;
                     gapi.client.setToken({ access_token: resp.access_token });
-                    
-                    // Mark as signed in (persists across refreshes)
                     localStorage.setItem('callBoardSignedIn', 'true');
-                    
                     updateSignedInUI();
+                    document.getElementById('authorizeButton').textContent = 'Sign In'; // Reset text
                     showStatus('✓ Signed in — auto-sync active', 'success');
                     startDriveAutoSave();
                 }
@@ -950,14 +954,27 @@
         
         function maybeEnableButtons() {
             if (gapiInited && gisInited) {
-                // If previously signed in, silently request a fresh token (no popup)
                 if (localStorage.getItem('callBoardSignedIn') === 'true') {
                     showStatus('Restoring session...', '');
-                    tokenClient.requestAccessToken({ prompt: '' }); // Empty prompt = silent refresh
+                    try {
+                        tokenClient.requestAccessToken({ prompt: '' });
+                    } catch(e) {
+                        localStorage.removeItem('callBoardSignedIn');
+                        showStatus('Session expired — please sign in', '');
+                    }
                 } else {
-                    showStatus('Ready to sign in', '');
+                    showStatus('', '');
                 }
             }
+        }
+        
+        // Called if silent refresh was blocked — shows one-click resume
+        function showResumeButton() {
+            const authorizeBtn = document.getElementById('authorizeButton');
+            authorizeBtn.textContent = '🔄 Resume Session';
+            authorizeBtn.style.display = 'inline-block';
+            document.getElementById('signoutButton').style.display = 'none';
+            showStatus('Click to resume your session', '');
         }
         
         function updateSignedInUI() {
@@ -969,7 +986,8 @@
         }
         
         function handleAuthClick() {
-            tokenClient.requestAccessToken({ prompt: 'consent' });
+            const isResume = localStorage.getItem('callBoardSignedIn') === 'true';
+            tokenClient.requestAccessToken({ prompt: isResume ? '' : 'select_account' });
         }
         
         function handleSignoutClick() {
@@ -1048,87 +1066,103 @@
                 if (!isAutoSave) showStatus('Please sign in first', 'error');
                 return;
             }
-
             if (!isAutoSave) showStatus('Saving...', '');
 
-            // Always save current visible state first
             saveCurrentDateData();
 
-            try {
-                const saveData = {
-                    "READABLE_SUMMARY": {
-                        "Saved": new Date().toLocaleString(),
-                        "Week": days.map(d => `${d.label} ${d.date}`).join(', ')
-                    },
-                    "RAW_DATA": {
-                        version: '1.1',
-                        savedAt: new Date().toISOString(),
-                        techs,
-                        days,
-                        data,
-                        customRows,
-                        dateStorage
-                    }
-                };
-
-                const fileContent = JSON.stringify(saveData, null, 2);
-
-                // Always use fetch directly for both create and update — avoids gapi quirks
-                let existingFileId = null;
-                try {
-                    const listResp = await fetch(
-                        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name='${CALL_BOARD_FILENAME}' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`)}&fields=files(id)&spaces=drive`,
-                        { headers: { Authorization: 'Bearer ' + accessToken } }
-                    );
-                    const listData = await listResp.json();
-                    if (listData.files && listData.files.length > 0) {
-                        existingFileId = listData.files[0].id;
-                    }
-                } catch (e) {
-                    console.warn('File search failed:', e.message);
+            // Clean dateStorage: strip old M/D keys, nulls, and empty dates
+            const cleanStorage = {};
+            Object.entries(dateStorage).forEach(([dateKey, entry]) => {
+                if (/^\d+\/\d+$/.test(dateKey)) return; // skip old M/D format
+                const cleanData = {};
+                let hasAppts = false;
+                techs.forEach(tech => {
+                    const clean = (entry.data[tech] || []).filter(a => a !== null && a !== undefined);
+                    cleanData[tech] = clean;
+                    if (clean.length > 0) hasAppts = true;
+                });
+                const hasNotes = entry.notes && entry.notes.trim().length > 0;
+                if (hasAppts || hasNotes) {
+                    cleanStorage[dateKey] = { data: cleanData, goal: entry.goal, notes: entry.notes || '' };
                 }
+            });
+            dateStorage = cleanStorage;
+
+            // Build readable daily breakdown
+            const breakdown = {};
+            Object.entries(cleanStorage)
+                .sort(([a], [b]) => new Date(a + ', 2026') - new Date(b + ', 2026'))
+                .forEach(([dateKey, entry]) => {
+                    let dayTotal = 0, dayCancelled = 0;
+                    const techLines = {};
+                    techs.forEach(tech => {
+                        const appts = entry.data[tech] || [];
+                        const notice    = appts.filter(a => a === '☺').length;
+                        const priority  = appts.filter(a => a === 'P').length;
+                        const cancelled = appts.filter(a => a === 'C').length;
+                        dayTotal += notice + priority;
+                        dayCancelled += cancelled;
+                        if (appts.length > 0) {
+                            const parts = [];
+                            if (notice)    parts.push(notice    + ' Notice Given');
+                            if (priority)  parts.push(priority  + ' Priority');
+                            if (cancelled) parts.push(cancelled + ' Cancelled');
+                            techLines[tech] = parts.join(', ');
+                        }
+                    });
+                    const pct = entry.goal > 0 ? Math.round((dayTotal / entry.goal) * 100) : 0;
+                    breakdown[dateKey] = {
+                        ...(entry.notes ? { 'Notes': entry.notes } : {}),
+                        'Goal':  entry.goal,
+                        'Total': dayTotal + ' jobs (' + pct + '% of goal)' + (dayCancelled > 0 ? ' | ' + dayCancelled + ' cancelled' : ''),
+                        ...techLines
+                    };
+                });
+
+            const saveData = {
+                'Last Saved': new Date().toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                'Current View': days.map(d => d.label + ': ' + d.date).join('  |  '),
+                'Daily Breakdown': breakdown,
+                'RAW_DATA': {
+                    version: '1.2',
+                    savedAt: new Date().toISOString(),
+                    techs, days, data, customRows,
+                    dateStorage: cleanStorage
+                }
+            };
+
+            try {
+                const fileContent = JSON.stringify(saveData, null, 2);
+                let existingFileId = null;
+                const listResp = await fetch(
+                    'https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent("name='" + CALL_BOARD_FILENAME + "' and '" + DRIVE_FOLDER_ID + "' in parents and trashed=false") + '&fields=files(id)&spaces=drive',
+                    { headers: { Authorization: 'Bearer ' + accessToken } }
+                );
+                const listData = await listResp.json();
+                if (listData.files && listData.files.length > 0) existingFileId = listData.files[0].id;
 
                 let uploadResp;
                 if (existingFileId) {
-                    // Update existing file
                     uploadResp = await fetch(
-                        `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=media`,
-                        {
-                            method: 'PATCH',
-                            headers: {
-                                Authorization: 'Bearer ' + accessToken,
-                                'Content-Type': 'application/json'
-                            },
-                            body: fileContent
-                        }
+                        'https://www.googleapis.com/upload/drive/v3/files/' + existingFileId + '?uploadType=media',
+                        { method: 'PATCH', headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' }, body: fileContent }
                     );
                 } else {
-                    // Create new file with metadata
-                    const metadata = JSON.stringify({
-                        name: CALL_BOARD_FILENAME,
-                        mimeType: 'application/json',
-                        parents: [DRIVE_FOLDER_ID]
-                    });
                     const form = new FormData();
-                    form.append('metadata', new Blob([metadata], { type: 'application/json' }));
+                    form.append('metadata', new Blob([JSON.stringify({ name: CALL_BOARD_FILENAME, mimeType: 'application/json', parents: [DRIVE_FOLDER_ID] })], { type: 'application/json' }));
                     form.append('file', new Blob([fileContent], { type: 'application/json' }));
-                    uploadResp = await fetch(
-                        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
-                        {
-                            method: 'POST',
-                            headers: { Authorization: 'Bearer ' + accessToken },
-                            body: form
-                        }
+                    uploadResp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+                        { method: 'POST', headers: { Authorization: 'Bearer ' + accessToken }, body: form }
                     );
                 }
 
                 if (!uploadResp.ok) {
                     const errText = await uploadResp.text();
-                    throw new Error(`Drive upload failed (${uploadResp.status}): ${errText}`);
+                    throw new Error('Drive upload failed (' + uploadResp.status + '): ' + errText);
                 }
 
                 const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                showStatus(`🔄 Synced ${now}`, 'success');
+                showStatus('🔄 Synced ' + now, 'success');
                 console.log('Drive save successful:', now);
 
             } catch (error) {
@@ -1197,54 +1231,33 @@
         
         // Date-based memory functions
         function saveCurrentDateData() {
-            // Save current board state to each date's storage
-            days.forEach((day, index) => {
-                const dateKey = day.date; // e.g., "2/10"
-                
+            days.forEach((day) => {
+                const dateKey = day.date;
                 if (!dateStorage[dateKey]) {
-                    dateStorage[dateKey] = {
-                        data: {},
-                        goal: day.goal,
-                        notes: day.notes
-                    };
+                    dateStorage[dateKey] = { data: {}, goal: day.goal, notes: day.notes };
                 }
-                
-                // Save appointments for this specific date
-                dateStorage[dateKey].data = {};
+                // Filter nulls so deleted slots never persist
                 techs.forEach(tech => {
-                    dateStorage[dateKey].data[tech] = [...(data[tech][day.id] || [])];
+                    dateStorage[dateKey].data[tech] = (data[tech][day.id] || []).filter(a => a !== null && a !== undefined);
                 });
-                
-                // Save goal and notes
-                dateStorage[dateKey].goal = day.goal;
+                dateStorage[dateKey].goal  = day.goal;
                 dateStorage[dateKey].notes = day.notes;
             });
         }
         
         function loadDateData() {
-            // Load data for the current dates being displayed
             days.forEach((day, index) => {
                 const dateKey = day.date;
-                
                 if (dateStorage[dateKey]) {
-                    // Restore appointments
                     techs.forEach(tech => {
-                        if (dateStorage[dateKey].data[tech]) {
-                            data[tech][day.id] = [...dateStorage[dateKey].data[tech]];
-                        } else {
-                            data[tech][day.id] = [];
-                        }
+                        // Filter nulls on load too — cleans up old dirty data
+                        data[tech][day.id] = (dateStorage[dateKey].data[tech] || []).filter(a => a !== null && a !== undefined);
                     });
-                    
-                    // Restore goal and notes
-                    day.goal = dateStorage[dateKey].goal || (index === 0 ? 13 : index === 1 ? 9 : 5);
+                    day.goal  = dateStorage[dateKey].goal  ?? (index === 0 ? 13 : index === 1 ? 9 : 5);
                     day.notes = dateStorage[dateKey].notes || '';
                 } else {
-                    // New date - initialize with empty data
-                    techs.forEach(tech => {
-                        data[tech][day.id] = [];
-                    });
-                    day.goal = (index === 0 ? 13 : index === 1 ? 9 : 5);
+                    techs.forEach(tech => { data[tech][day.id] = []; });
+                    day.goal  = (index === 0 ? 13 : index === 1 ? 9 : 5);
                     day.notes = '';
                 }
             });
