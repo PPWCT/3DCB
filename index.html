@@ -24,17 +24,19 @@
     </script>
     <style>
         :root {
-            --primary-red: #fca5a5;
-            --light-bg: #1A1D26;
-            --text-color: #e5e7eb;
-            --border-color: #343847;
-            --success-green: #86efac;
-            --warning-yellow: #fcd34d;
-            --tech-blue: #60a5fa;
-            --cancel-red: #A08B8B;
-            --dark-bg: #13151C;
-            --soft-text: #d1d5db;
-            --glow-blue: rgba(96, 165, 250, 0.15);
+            --primary-red:    #ef4444;       /* totals / alerts */
+            --light-bg:       #1a0505;       /* dark crimson tinted bg */
+            --text-color:     #f5f0f0;       /* near-white text */
+            --border-color:   #3d1515;       /* crimson-tinted border */
+            --success-green:  #86efac;       /* goal met */
+            --warning-yellow: #fcd34d;       /* goal close */
+            --tech-blue:      #8ebeef;       /* PPW light blue accent */
+            --cancel-red:     #770a0a;       /* cancelled */
+            --dark-bg:        #0d0202;       /* deepest background */
+            --soft-text:      #c9b8b8;       /* muted text */
+            --glow-blue:      rgba(142, 190, 239, 0.12);
+            --ppw-crimson:    #770a0a;       /* brand crimson */
+            --ppw-blue:       #8ebeef;       /* brand blue */
         }
         
         * {
@@ -45,7 +47,7 @@
         
         body {
             font-family: 'Work Sans', sans-serif;
-            background: #13151C;
+            background: #0d0202;
             padding: 0;
             min-height: 100vh;
             color: var(--text-color);
@@ -61,8 +63,8 @@
             width: 200%;
             height: 200%;
             background: 
-                radial-gradient(circle at 30% 40%, var(--glow-blue) 0%, transparent 40%),
-                radial-gradient(circle at 70% 60%, rgba(159, 168, 184, 0.12) 0%, transparent 40%);
+                radial-gradient(circle at 25% 35%, rgba(119, 10, 10, 0.18) 0%, transparent 45%),
+                radial-gradient(circle at 75% 65%, rgba(142, 190, 239, 0.08) 0%, transparent 45%);
             animation: gentleBreath 14s ease-in-out infinite;
             pointer-events: none;
             z-index: 0;
@@ -70,12 +72,12 @@
         
         @keyframes gentleBreath {
             0%, 100% { opacity: 0.5; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.03); }
+            50%       { opacity: 0.9; transform: scale(1.03); }
         }
         
-        /* Priority 2: Focus styles for accessibility */
+        /* Focus styles */
         *:focus-visible {
-            outline: 3px solid #60a5fa;
+            outline: 3px solid var(--ppw-blue);
             outline-offset: 2px;
         }
         
@@ -91,7 +93,8 @@
             margin-bottom: 0;
             position: relative;
             padding: 16px 24px 12px 24px;
-            background: rgba(19, 21, 28, 0.8);
+            background: rgba(13, 2, 2, 0.95);
+            border-bottom: 2px solid var(--ppw-crimson);
         }
         
         .auth-corner {
@@ -111,24 +114,24 @@
             cursor: pointer;
             border: none;
             transition: all 0.2s ease;
-            background: rgba(96, 165, 250, 0.2);
-            color: var(--tech-blue);
-            border: 1px solid var(--tech-blue);
+            background: rgba(119, 10, 10, 0.25);
+            color: var(--ppw-blue);
+            border: 1px solid var(--ppw-crimson);
         }
         
         .auth-corner-btn:hover {
-            background: rgba(96, 165, 250, 0.3);
+            background: rgba(119, 10, 10, 0.45);
             transform: translateY(-1px);
         }
         
         .auth-corner-btn.signout {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-            border-color: #ef4444;
+            background: rgba(119, 10, 10, 0.2);
+            color: #f87171;
+            border-color: #770a0a;
         }
         
         .auth-corner-btn.signout:hover {
-            background: rgba(239, 68, 68, 0.3);
+            background: rgba(119, 10, 10, 0.4);
         }
         
         .auth-status {
@@ -139,10 +142,10 @@
         .title {
             font-family: 'Bebas Neue', cursive;
             font-size: 36px;
-            color: var(--soft-text);
+            color: #ffffff;
             letter-spacing: 6px;
             margin-bottom: 0;
-            text-shadow: 0 0 20px rgba(96, 165, 250, 0.3);
+            text-shadow: 0 0 28px rgba(119, 10, 10, 0.7);
         }
         
         .subtitle {
@@ -153,7 +156,7 @@
         }
         
         .date-picker-section {
-            background: rgba(37, 41, 54, 0.5);
+            background: rgba(26, 5, 5, 0.7);
             backdrop-filter: blur(10px);
             padding: 12px 16px;
             border-radius: 0;
@@ -165,15 +168,15 @@
             flex-wrap: wrap;
             justify-content: center;
             border: none;
-            border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+            border-bottom: 1px solid rgba(119, 10, 10, 0.5);
         }
         
         .date-nav-btn {
             width: 36px;
             height: 36px;
             border-radius: 6px;
-            background: linear-gradient(135deg, var(--tech-blue) 0%, #3b82f6 100%);
-            color: #F0F2F5;
+            background: linear-gradient(135deg, #770a0a 0%, #a01010 100%);
+            color: #ffffff;
             border: none;
             font-size: 16px;
             cursor: pointer;
@@ -186,7 +189,7 @@
         
         .date-nav-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.4);
+            box-shadow: 0 4px 12px rgba(119, 10, 10, 0.5);
         }
         
         .date-nav-btn:active {
@@ -205,14 +208,14 @@
             font-size: 16px;
             font-weight: 600;
             color: var(--text-color);
-            background: rgba(37, 41, 54, 0.6);
+            background: rgba(20, 3, 3, 0.7);
             cursor: pointer;
         }
         
         .apply-dates-btn {
             padding: 10px 24px;
-            background: linear-gradient(135deg, var(--tech-blue) 0%, #3b82f6 100%);
-            color: #F0F2F5;
+            background: linear-gradient(135deg, #770a0a 0%, #a01010 100%);
+            color: #ffffff;
             border: none;
             border-radius: 8px;
             font-weight: 600;
@@ -225,7 +228,7 @@
         
         .apply-dates-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(96, 165, 250, 0.4);
+            box-shadow: 0 6px 20px rgba(119, 10, 10, 0.5);
         }
         
         .apply-dates-btn:disabled {
@@ -272,8 +275,8 @@
         }
         
         .google-btn.load {
-            background: linear-gradient(135deg, var(--tech-blue) 0%, #3b82f6 100%);
-            color: #F0F2F5;
+            background: linear-gradient(135deg, #770a0a 0%, #a01010 100%);
+            color: #ffffff;
         }
         
         .google-btn:hover:not(:disabled) {
@@ -287,14 +290,14 @@
             margin: 0;
             padding: 4px 0;
             min-height: 16px;
-            background: rgba(19, 21, 28, 0.5);
+            background: rgba(13, 2, 2, 0.8);
         }
         
         .sync-status.success { color: var(--success-green); }
         .sync-status.error { color: #ef4444; }
         
         .board {
-            background: rgba(37, 41, 54, 0.6);
+            background: rgba(20, 3, 3, 0.7);
             backdrop-filter: blur(10px);
             border-radius: 0;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
@@ -309,11 +312,11 @@
         .goals-bar {
             display: grid;
             grid-template-columns: 150px repeat(3, 1fr) 150px;
-            background: linear-gradient(135deg, rgba(96, 165, 250, 0.3) 0%, rgba(96, 165, 250, 0.2) 100%);
+            background: linear-gradient(135deg, rgba(119, 10, 10, 0.4) 0%, rgba(119, 10, 10, 0.2) 100%);
             padding: 10px;
             gap: 10px;
             min-width: 600px;
-            border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+            border-bottom: 1px solid rgba(119, 10, 10, 0.4);
         }
         
         .goal-item {
@@ -389,12 +392,12 @@
         .grid-header {
             display: grid;
             grid-template-columns: 150px repeat(3, 1fr) 150px;
-            background: rgba(28, 61, 90, 0.6);
+            background: rgba(50, 5, 5, 0.8);
             color: var(--text-color);
             font-weight: 700;
             text-align: center;
             padding: 10px 8px;
-            border-bottom: 2px solid rgba(96, 165, 250, 0.3);
+            border-bottom: 2px solid var(--ppw-crimson);
             font-size: 13px;
         }
         
@@ -412,7 +415,7 @@
         .tech-name {
             padding: 12px 16px;
             font-weight: 700;
-            color: var(--tech-blue);
+            color: var(--ppw-blue);
             display: flex;
             align-items: center;
             border-right: 1px solid var(--border-color);
@@ -440,15 +443,15 @@
             font-size: 1.6rem;
             cursor: pointer;
             transition: all 0.2s;
-            border: 2px dashed var(--tech-blue);
-            background: rgba(96, 165, 250, 0.1);
-            color: var(--tech-blue);
+            border: 2px dashed var(--ppw-crimson);
+            background: rgba(119, 10, 10, 0.1);
+            color: var(--ppw-blue);
             font-weight: bold;
         }
         
         .add-job-btn:hover {
             transform: scale(1.1);
-            background: rgba(96, 165, 250, 0.2);
+            background: rgba(119, 10, 10, 0.2);
             border-style: solid;
         }
         
@@ -538,8 +541,8 @@
             display: grid;
             grid-template-columns: 150px repeat(3, 1fr) 150px;
             background: rgba(42, 46, 61, 0.5);
-            border-top: 3px solid var(--tech-blue);
-            border-bottom: 3px solid var(--tech-blue);
+            border-top: 3px solid var(--ppw-crimson);
+            border-bottom: 3px solid var(--ppw-crimson);
         }
         
         .goal-progress {
@@ -572,9 +575,9 @@
         .cancellation-row {
             display: grid;
             grid-template-columns: 150px repeat(3, 1fr) 150px;
-            background: rgba(252, 211, 77, 0.15);
-            border-top: 2px solid var(--warning-yellow);
-            border-bottom: 2px solid var(--warning-yellow);
+            background: rgba(119, 10, 10, 0.12);
+            border-top: 2px solid rgba(119, 10, 10, 0.5);
+            border-bottom: 2px solid rgba(119, 10, 10, 0.5);
             padding: 8px 0;
         }
         
@@ -589,7 +592,7 @@
         .footer {
             padding: 12px;
             text-align: center;
-            background: rgba(37, 41, 54, 0.3);
+            background: rgba(13, 2, 2, 0.6);
         }
         
         .legend {
@@ -629,8 +632,8 @@
         
         .notes-section {
             padding: 12px;
-            background: rgba(42, 46, 61, 0.3);
-            border-top: 2px solid rgba(96, 165, 250, 0.3);
+            background: rgba(20, 3, 3, 0.5);
+            border-top: 2px solid var(--ppw-crimson);
         }
         
         .notes-header {
@@ -651,12 +654,12 @@
             background: rgba(37, 41, 54, 0.5);
             border-radius: 8px;
             padding: 10px;
-            border: 1px solid rgba(96, 165, 250, 0.2);
+            border: 1px solid rgba(119, 10, 10, 0.35);
         }
         
         .note-label {
             font-weight: 700;
-            color: var(--tech-blue);
+            color: var(--ppw-blue);
             margin-bottom: 6px;
             font-size: 13px;
         }
@@ -676,8 +679,8 @@
         
         .note-input:focus {
             outline: none;
-            border-color: var(--tech-blue);
-            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+            border-color: var(--ppw-crimson);
+            box-shadow: 0 0 0 2px rgba(119, 10, 10, 0.3);
         }
         
         .note-input::placeholder {
@@ -698,12 +701,12 @@
         }
         
         .modal-content {
-            background: rgba(37, 41, 54, 0.95);
+            background: rgba(18, 2, 2, 0.97);
             backdrop-filter: blur(20px);
             padding: 20px;
             border-radius: 12px;
             min-width: 280px;
-            border: 2px solid rgba(96, 165, 250, 0.3);
+            border: 2px solid var(--ppw-crimson);
         }
         
         .modal-title {
@@ -817,8 +820,8 @@
             </button>
         </div>
         <div class="sync-status" id="syncStatus"></div>
-        <div style="text-align: center; margin: 0; padding: 6px 0; background: rgba(19, 21, 28, 0.5); border-bottom: 1px solid rgba(96, 165, 250, 0.1);">
-            <a href="https://drive.google.com/drive/folders/1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU" target="_blank" style="font-size: 10px; color: var(--tech-blue); text-decoration: none;">
+        <div style="text-align: center; margin: 0; padding: 6px 0; background: rgba(13, 2, 2, 0.8); border-bottom: 1px solid rgba(119, 10, 10, 0.2);">
+            <a href="https://drive.google.com/drive/folders/1OFC7Zw08MgaVfnRCO3TPX17lnehVpXNU" target="_blank" style="font-size: 10px; color: var(--ppw-blue); text-decoration: none;">
                 📁 Drive Folder
             </a>
         </div>
