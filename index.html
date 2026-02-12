@@ -21,51 +21,6 @@
         let gisInited = false;
         let tokenClient;
         let accessToken = null;
-        
-        // Persistent login: Check for saved token on load
-        function checkSavedToken() {
-            const savedToken = localStorage.getItem('googleAccessToken');
-            const tokenExpiry = localStorage.getItem('googleTokenExpiry');
-            
-            if (savedToken && tokenExpiry) {
-                const now = new Date().getTime();
-                if (now < parseInt(tokenExpiry)) {
-                    // Token is still valid
-                    accessToken = savedToken;
-                    gapi.client.setToken({ access_token: savedToken });
-                    
-                    // Update UI to show signed in state
-                    document.getElementById('signoutButton').style.display = 'inline-block';
-                    document.getElementById('authorizeButton').style.display = 'none';
-                    document.getElementById('authStatus').style.display = 'inline-block';
-                    document.getElementById('saveButton').disabled = false;
-                    document.getElementById('loadButton').disabled = false;
-                    showStatus('✓ Auto-signed in', 'success');
-                    
-                    // Start auto-save
-                    startDriveAutoSave();
-                    return true;
-                } else {
-                    // Token expired, clear it
-                    localStorage.removeItem('googleAccessToken');
-                    localStorage.removeItem('googleTokenExpiry');
-                }
-            }
-            return false;
-        }
-        
-        // Save token to localStorage with 1 hour expiry
-        function saveToken(token) {
-            const expiryTime = new Date().getTime() + (60 * 60 * 1000); // 1 hour from now
-            localStorage.setItem('googleAccessToken', token);
-            localStorage.setItem('googleTokenExpiry', expiryTime.toString());
-        }
-        
-        // Clear saved token
-        function clearSavedToken() {
-            localStorage.removeItem('googleAccessToken');
-            localStorage.removeItem('googleTokenExpiry');
-        }
     </script>
     <style>
         :root {
@@ -978,22 +933,14 @@
                         showStatus('Auth failed: ' + (resp.error_description || resp.error), 'error');
                         return;
                     }
-                    // Priority 1: Correctly set token from response
                     accessToken = resp.access_token;
                     gapi.client.setToken({ access_token: resp.access_token });
                     
-                    // Save token for persistent login
-                    saveToken(resp.access_token);
+                    // Mark as signed in (persists across refreshes)
+                    localStorage.setItem('callBoardSignedIn', 'true');
                     
-                    // Priority 1: Update UI state reliably
-                    document.getElementById('signoutButton').style.display = 'inline-block';
-                    document.getElementById('authorizeButton').style.display = 'none';
-                    document.getElementById('authStatus').style.display = 'inline-block';
-                    document.getElementById('saveButton').disabled = false;
-                    document.getElementById('loadButton').disabled = false;
-                    showStatus('✓ Signed in - Auto-save enabled', 'success');
-                    
-                    // Start auto-save to Drive every 30 seconds
+                    updateSignedInUI();
+                    showStatus('✓ Signed in — auto-sync active', 'success');
                     startDriveAutoSave();
                 }
             });
@@ -1003,12 +950,22 @@
         
         function maybeEnableButtons() {
             if (gapiInited && gisInited) {
-                // Check for saved token and auto-sign in
-                const autoSignedIn = checkSavedToken();
-                if (!autoSignedIn) {
-                    showStatus('Ready to sign in', 'success');
+                // If previously signed in, silently request a fresh token (no popup)
+                if (localStorage.getItem('callBoardSignedIn') === 'true') {
+                    showStatus('Restoring session...', '');
+                    tokenClient.requestAccessToken({ prompt: '' }); // Empty prompt = silent refresh
+                } else {
+                    showStatus('Ready to sign in', '');
                 }
             }
+        }
+        
+        function updateSignedInUI() {
+            document.getElementById('signoutButton').style.display = 'inline-block';
+            document.getElementById('authorizeButton').style.display = 'none';
+            document.getElementById('authStatus').style.display = 'inline-block';
+            document.getElementById('saveButton').disabled = false;
+            document.getElementById('loadButton').disabled = false;
         }
         
         function handleAuthClick() {
@@ -1020,22 +977,17 @@
             if (token) {
                 google.accounts.oauth2.revoke(token.access_token);
                 gapi.client.setToken('');
-                accessToken = null;
-                
-                // Clear saved token from localStorage
-                clearSavedToken();
-                
-                // Stop auto-save interval
-                stopDriveAutoSave();
-                
-                // Priority 1: Correctly reset UI state
-                document.getElementById('authorizeButton').style.display = 'inline-block';
-                document.getElementById('signoutButton').style.display = 'none';
-                document.getElementById('authStatus').style.display = 'none';
-                document.getElementById('saveButton').disabled = true;
-                document.getElementById('loadButton').disabled = true;
-                showStatus('Signed out', 'success');
             }
+            accessToken = null;
+            localStorage.removeItem('callBoardSignedIn');
+            stopDriveAutoSave();
+            
+            document.getElementById('authorizeButton').style.display = 'inline-block';
+            document.getElementById('signoutButton').style.display = 'none';
+            document.getElementById('authStatus').style.display = 'none';
+            document.getElementById('saveButton').disabled = true;
+            document.getElementById('loadButton').disabled = true;
+            showStatus('Signed out', '');
         }
         
         function showStatus(message, type = '') {
@@ -1093,231 +1045,154 @@
         
         async function saveToDrive(isAutoSave = false) {
             if (!accessToken) {
-                showStatus('Please sign in first', 'error');
+                if (!isAutoSave) showStatus('Please sign in first', 'error');
                 return;
             }
-            
-            // Only show "Saving..." for manual saves
-            if (!isAutoSave) {
-                showStatus('Saving...', '');
-            }
-            
-            // Save current visible data before creating backup
+
+            if (!isAutoSave) showStatus('Saving...', '');
+
+            // Always save current visible state first
             saveCurrentDateData();
-            
+
             try {
-                const summary = {
-                    "CALL BOARD BACKUP": {
+                const saveData = {
+                    "READABLE_SUMMARY": {
                         "Saved": new Date().toLocaleString(),
                         "Week": days.map(d => `${d.label} ${d.date}`).join(', ')
                     },
-                    "GOALS": {},
-                    "APPOINTMENTS": {},
-                    "SUMMARY": {}
-                };
-                
-                days.forEach(day => {
-                    summary.GOALS[`${day.label} ${day.date}`] = day.goal;
-                    if (day.notes && day.notes.trim()) {
-                        if (!summary.NOTES) summary.NOTES = {};
-                        summary.NOTES[`${day.label} ${day.date}`] = day.notes;
-                    }
-                });
-                
-                let grandTotal = 0;
-                techs.forEach(tech => {
-                    summary.APPOINTMENTS[tech] = {};
-                    let techTotal = 0;
-                    
-                    days.forEach(day => {
-                        const appts = data[tech][day.id] || [];
-                        const active = appts.filter(a => a && a !== 'C');
-                        const cancelled = appts.filter(a => a === 'C').length;
-                        const noticeGiven = active.filter(a => a === '☺').length;
-                        const priority = active.filter(a => a === 'P').length;
-                        
-                        summary.APPOINTMENTS[tech][`${day.label} ${day.date}`] = {
-                            "Notice Given": noticeGiven,
-                            "Priority": priority,
-                            "Cancelled": cancelled,
-                            "Total Active": active.length
-                        };
-                        techTotal += active.length;
-                    });
-                    
-                    summary.APPOINTMENTS[tech]["TECH TOTAL"] = techTotal;
-                    grandTotal += techTotal;
-                });
-                
-                days.forEach(day => {
-                    let dayTotal = 0;
-                    techs.forEach(tech => {
-                        const appts = data[tech][day.id] || [];
-                        dayTotal += appts.filter(a => a && a !== 'C').length;
-                    });
-                    summary.SUMMARY[`${day.label} ${day.date}`] = {
-                        "Actual": dayTotal,
-                        "Goal": day.goal,
-                        "Status": dayTotal >= day.goal ? "✓ MET" : `${Math.round((dayTotal/day.goal)*100)}%`
-                    };
-                });
-                
-                summary.SUMMARY["GRAND TOTAL"] = grandTotal;
-                summary.SUMMARY["TOTAL GOAL"] = days.reduce((sum, day) => sum + day.goal, 0);
-                
-                const saveData = {
-                    "READABLE_SUMMARY": summary,
                     "RAW_DATA": {
-                        version: '1.0',
+                        version: '1.1',
                         savedAt: new Date().toISOString(),
-                        techs: techs,
-                        days: days,
-                        data: data,
-                        customRows: customRows,
-                        dateStorage: dateStorage // Save all date memories
+                        techs,
+                        days,
+                        data,
+                        customRows,
+                        dateStorage
                     }
                 };
-                
+
                 const fileContent = JSON.stringify(saveData, null, 2);
-                const existingFile = await findFile(CALL_BOARD_FILENAME);
-                
-                if (existingFile) {
-                    await updateFile(existingFile.id, fileContent);
-                } else {
-                    await createFile(CALL_BOARD_FILENAME, fileContent);
+
+                // Always use fetch directly for both create and update — avoids gapi quirks
+                let existingFileId = null;
+                try {
+                    const listResp = await fetch(
+                        `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name='${CALL_BOARD_FILENAME}' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`)}&fields=files(id)&spaces=drive`,
+                        { headers: { Authorization: 'Bearer ' + accessToken } }
+                    );
+                    const listData = await listResp.json();
+                    if (listData.files && listData.files.length > 0) {
+                        existingFileId = listData.files[0].id;
+                    }
+                } catch (e) {
+                    console.warn('File search failed:', e.message);
                 }
-                
-                // Show different messages for auto vs manual save
-                if (isAutoSave) {
-                    // Silent auto-save with timestamp
-                    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                    showStatus(`🔄 Synced ${now}`, 'success');
+
+                let uploadResp;
+                if (existingFileId) {
+                    // Update existing file
+                    uploadResp = await fetch(
+                        `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=media`,
+                        {
+                            method: 'PATCH',
+                            headers: {
+                                Authorization: 'Bearer ' + accessToken,
+                                'Content-Type': 'application/json'
+                            },
+                            body: fileContent
+                        }
+                    );
                 } else {
-                    showStatus('✓ Saved to Drive', 'success');
+                    // Create new file with metadata
+                    const metadata = JSON.stringify({
+                        name: CALL_BOARD_FILENAME,
+                        mimeType: 'application/json',
+                        parents: [DRIVE_FOLDER_ID]
+                    });
+                    const form = new FormData();
+                    form.append('metadata', new Blob([metadata], { type: 'application/json' }));
+                    form.append('file', new Blob([fileContent], { type: 'application/json' }));
+                    uploadResp = await fetch(
+                        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+                        {
+                            method: 'POST',
+                            headers: { Authorization: 'Bearer ' + accessToken },
+                            body: form
+                        }
+                    );
                 }
+
+                if (!uploadResp.ok) {
+                    const errText = await uploadResp.text();
+                    throw new Error(`Drive upload failed (${uploadResp.status}): ${errText}`);
+                }
+
+                const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                showStatus(`🔄 Synced ${now}`, 'success');
+                console.log('Drive save successful:', now);
+
             } catch (error) {
-                // Priority 1: Better error messages (no sensitive logging)
-                if (!isAutoSave) {
-                    showStatus('✗ Save failed: ' + (error.message || 'Unknown error'), 'error');
-                }
-                // Silent fail for auto-save to avoid spamming user
+                console.error('Drive save error:', error.message);
+                showStatus('✗ Sync failed: ' + error.message, 'error');
             }
         }
-        
+
         async function loadFromDrive(isSilent = false) {
             if (!accessToken) {
-                if (!isSilent) {
-                    showStatus('Please sign in first', 'error');
-                }
+                if (!isSilent) showStatus('Please sign in first', 'error');
                 return;
             }
-            
-            if (!isSilent) {
-                showStatus('Loading...', '');
-            }
-            
+
+            if (!isSilent) showStatus('Loading...', '');
+
             try {
-                const file = await findFile(CALL_BOARD_FILENAME);
-                if (!file) {
-                    showStatus('No data found in Drive', 'error');
+                // Find file using fetch directly
+                const listResp = await fetch(
+                    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name='${CALL_BOARD_FILENAME}' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`)}&fields=files(id)&spaces=drive`,
+                    { headers: { Authorization: 'Bearer ' + accessToken } }
+                );
+                const listData = await listResp.json();
+
+                if (!listData.files || listData.files.length === 0) {
+                    if (!isSilent) showStatus('No data found in Drive', 'error');
                     return;
                 }
-                
-                const content = await downloadFile(file.id);
-                const saveData = JSON.parse(content);
+
+                const fileId = listData.files[0].id;
+
+                // Download file content using fetch directly — avoids double-stringify bug
+                const downloadResp = await fetch(
+                    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+                    { headers: { Authorization: 'Bearer ' + accessToken } }
+                );
+
+                if (!downloadResp.ok) {
+                    throw new Error(`Download failed (${downloadResp.status})`);
+                }
+
+                const saveData = await downloadResp.json();
                 const boardData = saveData.RAW_DATA || saveData;
-                
-                if (boardData.techs) {
-                    techs.length = 0;
-                    techs.push(...boardData.techs);
-                }
-                if (boardData.days) {
-                    days.length = 0;
-                    days.push(...boardData.days);
-                }
-                if (boardData.data) {
-                    Object.keys(data).forEach(key => delete data[key]);
+
+                if (boardData.techs) { techs.length = 0; techs.push(...boardData.techs); }
+                if (boardData.days)  { days.length = 0;  days.push(...boardData.days);  }
+                if (boardData.data)  {
+                    Object.keys(data).forEach(k => delete data[k]);
                     Object.assign(data, boardData.data);
                 }
-                if (boardData.customRows) {
-                    customRows.length = 0;
-                    customRows.push(...boardData.customRows);
-                }
+                if (boardData.customRows) { customRows.length = 0; customRows.push(...boardData.customRows); }
                 if (boardData.dateStorage) {
                     dateStorage = boardData.dateStorage;
-                    loadDateData(); // Load data for current visible dates
+                    loadDateData();
                 }
-                
+
                 renderBoard();
-                if (!isSilent) {
-                    showStatus('✓ Loaded from Drive', 'success');
-                }
+                if (!isSilent) showStatus('✓ Loaded from Drive', 'success');
+                console.log('Drive load successful');
+
             } catch (error) {
-                if (!isSilent) {
-                    showStatus('✗ Load failed: ' + (error.message || 'Unknown error'), 'error');
-                }
+                console.error('Drive load error:', error.message);
+                if (!isSilent) showStatus('✗ Load failed: ' + error.message, 'error');
             }
-        }
-        
-        async function findFile(filename) {
-            const response = await gapi.client.drive.files.list({
-                q: `name='${filename}' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`,
-                fields: 'files(id, name)',
-                spaces: 'drive'
-            });
-            return response.result.files && response.result.files.length > 0 ? response.result.files[0] : null;
-        }
-        
-        async function createFile(filename, content) {
-            const metadata = {
-                name: filename,
-                mimeType: 'application/json',
-                parents: [DRIVE_FOLDER_ID]
-            };
-            
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
-            form.append('file', new Blob([content], {type: 'application/json'}));
-            
-            const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: 'POST',
-                headers: new Headers({'Authorization': 'Bearer ' + accessToken}),
-                body: form
-            });
-            
-            if (!response.ok) {
-                throw new Error('Upload failed: ' + response.statusText);
-            }
-            
-            return await response.json();
-        }
-        
-        async function updateFile(fileId, content) {
-            const response = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
-                method: 'PATCH',
-                headers: new Headers({
-                    'Authorization': 'Bearer ' + accessToken,
-                    'Content-Type': 'application/json'
-                }),
-                body: content
-            });
-            
-            if (!response.ok) {
-                throw new Error('Update failed: ' + response.statusText);
-            }
-            
-            return await response.json();
-        }
-        
-        // Priority 1: Fixed downloadFile to return raw JSON string
-        async function downloadFile(fileId) {
-            const response = await gapi.client.drive.files.get({
-                fileId: fileId,
-                alt: 'media'
-            });
-            
-            // Return raw body if available, otherwise stringify result
-            return response.body || JSON.stringify(response.result);
         }
         
         // Date-based memory functions
